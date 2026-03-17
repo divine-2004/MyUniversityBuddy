@@ -53,8 +53,28 @@
 
 ## Screenshots
 
-### Profile Card
-![Profile Card](screenshots/profile-card.png)
+## Screenshots
 
-### FAQ Section
-![FAQ Section](screenshots/faq-expanded.png)
+### Login Page
+![Login](screenshots/login.png)
+
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### Profile Card (initial view)
+![Profile Card1](screenshots/profile-card1.png)
+
+### Profile Card (after editing)
+![Profile Card2](screenshots/profile-card2.png)
+
+### FAQ Section (collapsed)
+![FAQ Expanded 1](screenshots/faq-expanded1.png)
+
+### FAQ Section (expanded)
+![FAQ Expanded 2](screenshots/faq-expanded2.png)
+
+### Notifications Page
+![Notifications](screenshots/notifications.png)
+
+### Requests Page
+![Requests](screenshots/requests.png)
