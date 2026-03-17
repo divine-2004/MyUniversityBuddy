@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FMRMS Dashboard · SNSU</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="app-body">
+  <header class="topbar">
+    <div class="brand">
+      <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <span class="logo">SNSU FMRMS</span>
+    </div>
+    <div class="topbar-actions">
+      <span class="topbar-title" id="topbarTitle">Dashboard</span>
+      <div class="topbar-spacer"></div>
+      <button class="icon-btn" onclick="window.location='notifications.html'" aria-label="View notifications">
+        <span class="bell">🔔</span>
+        <span class="notification-badge" id="notifBadge"></span>
+      </button>
+      <span class="user-greeting" id="userGreeting"></span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="profile-block">
+          <img id="sidebarProfilePhoto" class="sidebar-avatar" src="" alt="Profile" />
+          <div class="profile-info">
+            <div class="profile-name" id="sidebarProfileName">Student</div>
+            <div class="profile-meta" id="sidebarProfileMeta">—</div>
+          </div>
+        </div>
+
+        <ul class="nav">
+          <li><a href="index.html"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a></li>
+          <li><a href="notifications.html"><span class="nav-icon">🔔</span><span class="nav-label">Notifications</span></a></li>
+          <li><a href="profile.html"><span class="nav-icon">🧑</span><span class="nav-label">Profile</span></a></li>
+          <li><a href="notes.html"><span class="nav-icon">📝</span><span class="nav-label">Requests</span></a></li>
+          <li><a href="help.html"><span class="nav-icon">❓</span><span class="nav-label">Help</span></a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="logout()">
+          <span class="nav-icon">🚪</span><span class="nav-label">Logout</span>
+        </button>
+      </div>
+    </nav>
+
+    <main class="main">
+      <section class="page-header">
+        <h1>Facility Maintenance Dashboard</h1>
+        <p class="page-subtitle">Track open requests, monitor status, and plan repairs.</p>
+      </section>
+
+      <div class="grid">
+        <div class="card">
+          <div class="card-header">
+            <h3>Request summary</h3>
+            <span class="card-note">Real-time insights</span>
+          </div>
+          <ul class="stats">
+            <li><strong id="openCount">0</strong> Pending</li>
+            <li><strong id="inProgressCount">0</strong> In progress</li>
+            <li><strong id="resolvedCount">0</strong> Completed</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Requests by status</h3>
+            <span class="card-note">Quick breakdown</span>
+          </div>
+          <canvas id="statusChart" class="chart-canvas"></canvas>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Request trend</h3>
+            <span class="card-note">Last 7 days</span>
+          </div>
+          <canvas id="trendChart" class="chart-canvas"></canvas>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Quick actions</h3>
+            <span class="card-note">Jumpstart your workflow</span>
+          </div>
+          <ul class="quick-links">
+            <li><a href="notes.html">Create a new maintenance request</a></li>
+            <li><a href="profile.html">Update your student card</a></li>
+          </ul>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="chartTooltip" class="chart-tooltip" aria-hidden="true"></div>
+
+  <script src="js/script.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', initDashboard);</script>
+</body>
+</html>

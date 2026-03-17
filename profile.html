@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Card · FMRMS</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="app-body">
+  <header class="topbar">
+    <div class="brand">
+      <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <span class="logo">SNSU FMRMS</span>
+    </div>
+    <div class="topbar-actions">
+      <span class="topbar-title" id="topbarTitle">Student Card</span>
+      <div class="topbar-spacer"></div>
+      <button class="icon-btn" onclick="window.location='notifications.html'" aria-label="View notifications">
+        <span class="bell">🔔</span>
+        <span class="notification-badge" id="notifBadge"></span>
+      </button>
+      <span class="user-greeting" id="userGreeting"></span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="profile-block">
+          <img id="sidebarProfilePhoto" class="sidebar-avatar" src="" alt="Profile" />
+          <div class="profile-info">
+            <div class="profile-name" id="sidebarProfileName">Student</div>
+            <div class="profile-meta" id="sidebarProfileMeta">—</div>
+          </div>
+        </div>
+
+        <ul class="nav">
+          <li><a href="index.html"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a></li>
+          <li><a href="notifications.html"><span class="nav-icon">🔔</span><span class="nav-label">Notifications</span></a></li>
+          <li><a href="profile.html"><span class="nav-icon">🧑</span><span class="nav-label">Profile</span></a></li>
+          <li><a href="notes.html"><span class="nav-icon">📝</span><span class="nav-label">Requests</span></a></li>
+          <li><a href="help.html"><span class="nav-icon">❓</span><span class="nav-label">Help</span></a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="logout()">
+          <span class="nav-icon">🚪</span><span class="nav-label">Logout</span>
+        </button>
+      </div>
+    </nav>
+
+    <main class="main">
+      <section class="page-header">
+        <h1>Student Card</h1>
+        <p class="page-subtitle">Your profile is shown here and is used to tag your maintenance requests.</p>
+      </section>
+
+      <div class="grid">
+        <div class="card profile-card">
+          <h3>Your profile</h3>
+          <div class="form-row">
+            <label for="name">Full name</label>
+            <input id="name" placeholder="Enter your full name" />
+          </div>
+          <div class="form-row">
+            <label for="studentId">Student ID</label>
+            <input id="studentId" placeholder="Enter your student ID" />
+          </div>
+          <div class="form-row">
+            <label for="course">Course / Program</label>
+            <input id="course" placeholder="e.g., Mechanical Engineering" />
+          </div>
+          <div class="form-row">
+            <label for="year">Year level</label>
+            <input id="year" placeholder="e.g., 2" />
+          </div>
+          <div class="form-row">
+            <label for="email">Email</label>
+            <input id="email" type="email" placeholder="you@example.com" />
+          </div>
+          <div class="form-row">
+            <label for="phone">Phone number</label>
+            <input id="phone" type="tel" placeholder="e.g., +63 912 345 6789" />
+          </div>
+
+          <div class="form-row">
+            <label for="photo">Profile photo</label>
+            <input id="photo" type="file" accept="image/*" onchange="handleProfilePhotoUpload(event)" />
+          </div>
+
+          <div class="profile-picture">
+            <img id="profilePhoto" src="" alt="Profile photo" />
+            <p class="muted">Upload a photo to personalize your student card.</p>
+          </div>
+
+          <button class="btn primary" onclick="saveProfile()">Save profile</button>
+        </div>
+
+        <div class="card">
+          <h3>Student card</h3>
+          <p><strong>Name:</strong> <span id="cardName">—</span></p>
+          <p><strong>Student ID:</strong> <span id="cardId">—</span></p>
+          <p><strong>Program:</strong> <span id="cardCourse">—</span></p>
+          <p><strong>Year:</strong> <span id="cardYear">—</span></p>
+          <p><strong>Email:</strong> <span id="cardEmail">—</span></p>
+          <p><strong>Phone:</strong> <span id="cardPhone">—</span></p>
+          <p class="muted">This card helps maintenance staff know who to contact if they have questions.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', initProfile);</script>
+</body>
+</html>
