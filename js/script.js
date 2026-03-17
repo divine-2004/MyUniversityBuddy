@@ -706,12 +706,14 @@ function renderRequests() {
 
     const dueDateStr = request.dueDate ? new Date(request.dueDate).toLocaleDateString() : 'Not set';
     const reported = request.reportedAt ? new Date(request.reportedAt).toLocaleString() : 'Unknown';
+    const priority = String(request.priority || 'Medium');
+    const priorityClass = priority.toLowerCase();
 
     li.innerHTML = `
       <div class="request-label">
         <div class="request-meta">
           <strong>${escapeHtml(request.title)}</strong>
-          <span class="badge ${request.priority.toLowerCase()}">${request.priority}</span>
+          <span class="badge ${priorityClass}">${priority}</span>
         </div>
         <div class="request-subtitle">
           <span><strong>Facility:</strong> ${escapeHtml(request.location)}</span>
