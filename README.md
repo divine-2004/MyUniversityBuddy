@@ -50,9 +50,6 @@
 4. Visit **Help** to see the FAQ accordion.
 
 ---
-
-## Screenshots
-
 ## Screenshots
 
 ### Login Page
