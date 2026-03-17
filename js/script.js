@@ -6,6 +6,14 @@ const STORAGE_KEYS = {
   help: 'helpMessages',
 };
 
+function debounce(fn, delay) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn(...args), delay);
+  };
+}
+
 function requireAuth() {
   if (window.location.pathname.endsWith('login.html')) {
     return;
@@ -108,7 +116,7 @@ function getDefaultProfilePhoto() {
     );
 }
 
-function saveProfile() {
+function saveProfile(showAlert = true) {
   const name = document.getElementById('name').value.trim();
   const studentId = document.getElementById('studentId').value.trim();
   const course = document.getElementById('course').value.trim();
@@ -120,7 +128,10 @@ function saveProfile() {
   const profile = { name, studentId, course, year, email, phone, photo };
   localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify(profile));
 
-  alert('Profile saved.');
+  if (showAlert) {
+    alert('Profile saved.');
+  }
+
   updateUserGreeting();
   updateStudentCard();
 }
@@ -140,6 +151,23 @@ function populateProfile() {
     preview.src = src;
     preview.setAttribute('data-src', src);
   }
+}
+
+function setupProfileAutoSave() {
+  const fields = ['name', 'studentId', 'course', 'year', 'email', 'phone'];
+  const debouncedSave = debounce(() => saveProfile(false), 800);
+
+  fields.forEach((fieldId) => {
+    const input = document.getElementById(fieldId);
+    if (!input) return;
+
+    input.addEventListener('input', () => {
+      updateStudentCard();
+      updateUserGreeting();
+      updateSidebarProfile();
+      debouncedSave();
+    });
+  });
 }
 
 function handleProfilePhotoUpload(event) {
@@ -253,6 +281,7 @@ function initProfile() {
   updateTopbarTitle();
   populateProfile();
   updateStudentCard();
+  setupProfileAutoSave();
   updateNotificationBadge();
 }
 
@@ -283,7 +312,33 @@ function initHelp() {
   updateUserGreeting();
   updateTopbarTitle();
   updateStudentCard();
+  initFaqAccordion();
   updateNotificationBadge();
+}
+
+function initFaqAccordion() {
+  const items = document.querySelectorAll('.faq-item');
+  items.forEach((item) => {
+    const question = item.querySelector('.faq-question');
+    const answer = item.querySelector('.faq-answer');
+    if (!question || !answer) return;
+
+    answer.style.maxHeight = '0';
+    answer.style.overflow = 'hidden';
+    answer.style.transition = 'max-height 0.25s ease';
+
+    question.setAttribute('aria-expanded', 'false');
+    question.addEventListener('click', () => {
+      const expanded = question.getAttribute('aria-expanded') === 'true';
+      question.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+      item.classList.toggle('open', !expanded);
+      if (!expanded) {
+        answer.style.maxHeight = `${answer.scrollHeight}px`;
+      } else {
+        answer.style.maxHeight = '0';
+      }
+    });
+  });
 }
 
 function initNotifications() {
