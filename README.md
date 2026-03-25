@@ -50,7 +50,6 @@
 4. Visit **Help** to see the FAQ accordion.
 
 ---
-
 ## Screenshots
 
 ### Login Page
@@ -60,6 +59,7 @@
 ![Dashboard](screenshots/dashboard.png)
 
 ### Profile Card (initial view)
+<<<<<<< HEAD
 ![Profile Card (initial view)](screenshots/profile-card1.png)
 
 ### Profile Card (after editing)
