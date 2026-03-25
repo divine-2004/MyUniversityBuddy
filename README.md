@@ -1,4 +1,4 @@
-# MyUniversityBuddy – Assignment 1
+# SNSU FMRMS – Assignment 1
 
 ## Features Implemented
 1. Student Profile Card
