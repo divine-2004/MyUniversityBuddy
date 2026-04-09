@@ -1,8 +1,5 @@
 <<<<<<< HEAD
 # SNSU-FRMS (Surigao del Norte State University - Facility Request and Monitoring System)
-=======
-# SNSU FMRMS – Assignment 1
->>>>>>> fc1f6052f84c7dff618db1d166bf3b408bbd07df
 
 ## Features Implemented
 1. Student Profile Card
