@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # SNSU-FRMS (Surigao del Norte State University - Facility Request and Monitoring System)
 
 ## Features Implemented
