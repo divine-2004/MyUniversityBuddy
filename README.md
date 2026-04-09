@@ -50,7 +50,6 @@
 4. Visit **Help** to see the FAQ accordion.
 
 ---
-<<<<<<< HEAD
 
 ## Documentation Pack
 
@@ -139,8 +138,6 @@ npm run test:e2e:open
 
 ---
 
-=======
->>>>>>> fc1f6052f84c7dff618db1d166bf3b408bbd07df
 ## Screenshots
 
 ### Login Page
@@ -150,7 +147,6 @@ npm run test:e2e:open
 ![Dashboard](screenshots/dashboard.png)
 
 ### Profile Card (initial view)
-<<<<<<< HEAD
 ![Profile Card (initial view)](screenshots/profile-card1.png)
 
 ### Profile Card (after editing)
