@@ -14,6 +14,22 @@ function debounce(fn, delay) {
   };
 }
 
+function getProfile() {
+  const raw = localStorage.getItem(STORAGE_KEYS.profile);
+  try {
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function getDefaultProfilePhoto() {
+  return 'data:image/svg+xml;charset=UTF-8,' +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs><rect width="120" height="120" rx="24" fill="#e7f2ff"/><circle cx="60" cy="48" r="28" fill="#fff" stroke="#dbeafe" stroke-width="4"/><path d="M22 104c0-18 14-32 33-32s33 14 33 32" fill="none" stroke="#dbeafe" stroke-width="4" stroke-linecap="round"/></svg>`
+    );
+}
+
 function requireAuth() {
   if (window.location.pathname.endsWith('login.html')) {
     return;
@@ -98,22 +114,6 @@ function setActiveNav() {
       link.classList.remove('active');
     }
   });
-}
-
-function getProfile() {
-  const raw = localStorage.getItem(STORAGE_KEYS.profile);
-  try {
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function getDefaultProfilePhoto() {
-  return 'data:image/svg+xml;charset=UTF-8,' +
-    encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs><rect width="120" height="120" rx="24" fill="#e7f2ff"/><circle cx="60" cy="48" r="28" fill="#fff" stroke="#dbeafe" stroke-width="4"/><path d="M22 104c0-18 14-32 33-32s33 14 33 32" fill="none" stroke="#dbeafe" stroke-width="4" stroke-linecap="round"/></svg>`
-    );
 }
 
 function saveProfile(showAlert = true) {
