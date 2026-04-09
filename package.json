@@ -1,0 +1,21 @@
+{
+  "name": "snsu-frms",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SNSU Facility Request and Monitoring System test harness and documentation.",
+  "scripts": {
+    "test": "jest --runInBand",
+    "test:unit": "jest --runInBand tests/unit",
+    "test:integration": "jest --runInBand tests/integration",
+    "test:e2e": "start-server-and-test start http://127.0.0.1:8080 \"cypress run\"",
+    "test:e2e:open": "start-server-and-test start http://127.0.0.1:8080 \"cypress open\"",
+    "start": "http-server . -p 8080 -c-1"
+  },
+  "devDependencies": {
+    "cypress": "^14.5.4",
+    "http-server": "^14.1.1",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
+    "start-server-and-test": "^2.0.10"
+  }
+}

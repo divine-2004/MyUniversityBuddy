@@ -1,4 +1,4 @@
-# MyUniversityBuddy – Assignment 1
+# SNSU-FRMS (Surigao del Norte State University - Facility Request and Monitoring System)
 
 ## Features Implemented
 1. Student Profile Card
@@ -48,6 +48,93 @@
    - Password: `1234`
 3. Visit **Profile** to edit and view the profile card.
 4. Visit **Help** to see the FAQ accordion.
+
+---
+
+## Documentation Pack
+
+The generated mini-spec package is located in `student-min-spec/`.
+
+Included files:
+- `00-context.md`
+- `10-requirements.md`
+- `20-api.md`
+- `30-invariants.md`
+- `40-acceptance.md`
+- `50-edge-cases.md`
+- `decisions.md`
+- `README.md`
+- `submission-reflection.md`
+
+---
+
+## Testing Setup
+
+The project now includes:
+- `Jest` for unit and integration tests
+- `Cypress` for end-to-end browser tests
+
+Test folders:
+- `tests/unit/`
+- `tests/integration/`
+- `tests/e2e/`
+
+Configuration files:
+- `package.json`
+- `jest.config.js`
+- `cypress.config.js`
+
+### Install dependencies
+
+```bash
+npm install
+```
+
+### Run all Jest tests
+
+```bash
+npm test
+```
+
+### Run only unit tests
+
+```bash
+npm run test:unit
+```
+
+### Run only integration tests
+
+```bash
+npm run test:integration
+```
+
+### Run Cypress E2E tests
+
+If Cypress has not downloaded its browser binary yet, run:
+
+```bash
+npx cypress install
+```
+
+Then run:
+
+```bash
+npm run test:e2e
+```
+
+Or open the interactive Cypress runner:
+
+```bash
+npm run test:e2e:open
+```
+
+### Covered test scenarios
+
+- Profile rendering from saved data
+- Profile autosave to `localStorage`
+- FAQ expand/collapse toggle behavior
+- Profile form updates the student card preview
+- FAQ interaction flow in the browser
 
 ---
 
