@@ -12,3 +12,12 @@
 - A `.faq-item` missing either `.faq-question` or `.faq-answer` should be skipped safely.
 - Very long answer content should still expand using measured `scrollHeight`.
 - Repeated clicks should keep `aria-expanded`, CSS class state, and `max-height` in sync.
+- Admin FAQ management actions should not prevent the student FAQ accordion from working.
+
+## Facility Requests and Admin
+- An empty request title, location, or description should block creation and show an alert.
+- A request ID may collide only if the timestamp generator repeats; using `Date.now()` is acceptable for demo data.
+- A cancelled or completed request should not be eligible for status progression.
+- If `facilityRequests` contains invalid JSON, the app should return an empty request list instead of crashing.
+- Notifications should be preserved even if request details later change.
+- Filtering with no matches should show an empty state rather than hide the request container.

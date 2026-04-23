@@ -7,4 +7,10 @@
 5. Each FAQ item contains exactly one question control and one answer container.
 6. FAQ questions manage accessibility state through `aria-expanded`.
 7. Expanding or collapsing one FAQ item must not remove the content of any answer.
-8. The current implementation allows multiple FAQ items to stay open at the same time.
+8. The current FAQ implementation allows multiple FAQ items to stay open at the same time.
+9. Requests are treated as browser-local records and are preserved through refreshes.
+10. Request status is always one of: `Pending`, `In Progress`, `Completed`, or `Cancelled`.
+11. Notifications are append-only logs of request state changes and due-date alerts.
+12. The request list filter is case-insensitive and should not modify underlying data.
+13. Admin dashboard summary counts reflect the current request collection.
+14. Removing a request updates both the list and saved storage consistently.

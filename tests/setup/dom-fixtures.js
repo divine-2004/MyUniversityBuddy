@@ -40,7 +40,33 @@ function createFaqDom() {
   });
 }
 
+function createRequestDom() {
+  document.body.innerHTML = `
+    <input id="requestTitle" />
+    <input id="requestLocation" />
+    <select id="requestType">
+      <option value="Electrical">Electrical</option>
+      <option value="Plumbing">Plumbing</option>
+      <option value="HVAC">HVAC</option>
+      <option value="Structural">Structural</option>
+      <option value="Other">Other</option>
+    </select>
+    <textarea id="requestDescription"></textarea>
+    <input id="requestDate" type="date" />
+    <input id="requestDue" type="date" />
+    <select id="requestPriority">
+      <option value="Low">Low</option>
+      <option value="Medium">Medium</option>
+      <option value="High">High</option>
+    </select>
+    <input id="requestFilter" />
+    <span id="taskCount"></span>
+    <ul id="taskList"></ul>
+  `;
+}
+
 module.exports = {
   createProfileDom,
   createFaqDom,
+  createRequestDom,
 };
