@@ -1,5 +1,6 @@
 const STORAGE_KEYS = {
   auth: 'loggedIn',
+  role: 'userRole',
   profile: 'profileData',
   requests: 'facilityRequests',
   notifications: 'fmrmsNotifications',
@@ -40,13 +41,20 @@ function requireAuth() {
   }
 }
 
+function getUserRole() {
+  const role = localStorage.getItem(STORAGE_KEYS.role);
+  return role === 'ADMIN' ? 'ADMIN' : 'STUDENT';
+}
+
 function login() {
   const user = document.getElementById('username').value.trim();
   const pass = document.getElementById('password').value;
+  const normalizedUser = user.toLowerCase();
 
-  if (user === 'student' && pass === '1234') {
+  if ((normalizedUser === 'student' || normalizedUser === 'admin') && pass === '1234') {
     localStorage.setItem(STORAGE_KEYS.auth, 'true');
-    localStorage.setItem('username', user);
+    localStorage.setItem(STORAGE_KEYS.role, normalizedUser === 'admin' ? 'ADMIN' : 'STUDENT');
+    localStorage.setItem('username', normalizedUser === 'admin' ? 'ADMIN' : 'student');
     window.location = 'index.html';
     return;
   }
@@ -56,6 +64,8 @@ function login() {
 
 function logout() {
   localStorage.removeItem(STORAGE_KEYS.auth);
+  localStorage.removeItem(STORAGE_KEYS.role);
+  localStorage.removeItem('username');
   window.location = 'login.html';
 }
 
@@ -204,8 +214,9 @@ function updateTopbarTitle() {
 
 function updateSidebarProfile() {
   const profile = getProfile();
-  const name = profile.name || 'Student';
-  const meta = [profile.course, profile.year].filter(Boolean).join(' • ') || '—';
+  const role = getUserRole();
+  const name = profile.name || (role === 'ADMIN' ? 'ADMIN' : 'Student');
+  const meta = role === 'ADMIN' ? 'ADMIN' : [profile.course, profile.year].filter(Boolean).join(' • ') || '—';
   const photo = profile.photo || getDefaultProfilePhoto();
 
   const elName = document.getElementById('sidebarProfileName');
@@ -222,12 +233,13 @@ function updateSidebarProfile() {
 
 function updateStudentCard() {
   const profile = getProfile();
-  const name = profile.name || '—';
-  const studentId = profile.studentId || '—';
-  const course = profile.course || '—';
-  const year = profile.year || '—';
-  const email = profile.email || '—';
-  const phone = profile.phone || '—';
+  const role = getUserRole();
+  const name = role === 'ADMIN' ? 'ADMIN' : profile.name || '—';
+  const studentId = role === 'ADMIN' ? '—' : profile.studentId || '—';
+  const course = role === 'ADMIN' ? '—' : profile.course || '—';
+  const year = role === 'ADMIN' ? '—' : profile.year || '—';
+  const email = role === 'ADMIN' ? '—' : profile.email || '—';
+  const phone = role === 'ADMIN' ? '—' : profile.phone || '—';
   const photo = profile.photo || getDefaultProfilePhoto();
 
   const elName = document.getElementById('cardName');
