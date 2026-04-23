@@ -192,7 +192,7 @@ function updateUserGreeting() {
   const el = document.getElementById('userGreeting');
 
   if (el) {
-    el.textContent = `Hi, ${name}`;
+    el.textContent = '';
   }
 }
 
