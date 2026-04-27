@@ -4,6 +4,9 @@ const {
   getRequests,
   changeStatus,
   cancelRequest,
+  approveRequest,
+  rejectRequest,
+  addRequestRemark,
   removeRequest,
   clearResolved,
 } = require('../../js/script');
@@ -59,5 +62,28 @@ describe('request management', () => {
 
     clearResolved();
     expect(getRequests().map((item) => item.status)).toEqual(['Pending']);
+  });
+
+  test('approves and rejects requests and records history', () => {
+    saveRequests([{ id: 41, title: 'Window repair', status: 'Pending', history: [] }]);
+
+    approveRequest(41);
+    expect(getRequests()[0].status).toBe('Approved');
+    expect(getRequests()[0].history.pop().action).toBe('Approved');
+
+    rejectRequest(41);
+    expect(getRequests()[0].status).toBe('Rejected');
+    expect(getRequests()[0].history.pop().action).toBe('Rejected');
+  });
+
+  test('adds a remark to a request', () => {
+    saveRequests([{ id: 51, title: 'Fan issue', status: 'Pending', history: [] }]);
+    jest.spyOn(window, 'prompt').mockReturnValue('Needs urgent attention');
+
+    addRequestRemark(51);
+
+    expect(getRequests()[0].remark).toBe('Needs urgent attention');
+    expect(getRequests()[0].history.pop().action).toBe('Remark added');
+    window.prompt.mockRestore();
   });
 });

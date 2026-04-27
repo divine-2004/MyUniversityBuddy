@@ -17,6 +17,12 @@ function createProfileDom() {
     <div id="sidebarProfileName"></div>
     <div id="sidebarProfileMeta"></div>
     <img id="sidebarProfilePhoto" data-src="" src="" alt="Sidebar profile photo" />
+    <span id="studentProfileName"></span>
+    <span id="studentProfileId"></span>
+    <span id="studentProfileCourse"></span>
+    <span id="studentProfileYear"></span>
+    <span id="studentProfileEmail"></span>
+    <span id="studentProfilePhone"></span>
   `;
 }
 

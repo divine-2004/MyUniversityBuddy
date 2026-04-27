@@ -72,17 +72,20 @@
 
         <div class="card">
           <h3>FAQ</h3>
-          <div class="faq-item">
-            <button class="faq-question" type="button" aria-expanded="false">How do I submit a maintenance request?</button>
-            <div class="faq-answer">Go to the "Requests" page, fill out the form, and click "Create request".</div>
+          <div class="faq-section">
+            <!-- FAQs will be rendered here dynamically -->
           </div>
-          <div class="faq-item">
-            <button class="faq-question" type="button" aria-expanded="false">Can I cancel a request?</button>
-            <div class="faq-answer">Yes — use the "Cancel" button on the request to stop it from moving forward.</div>
-          </div>
-          <div class="faq-item">
-            <button class="faq-question" type="button" aria-expanded="false">How do I get notifications?</button>
-            <div class="faq-answer">Notifications appear in the bell icon when a request status changes or a due date is near.</div>
+          <div id="adminFaqControls" style="display: none;">
+            <h4>Add New FAQ</h4>
+            <div class="form-row">
+              <label for="newFaqQuestion">Question</label>
+              <input type="text" id="newFaqQuestion" placeholder="Enter question..." />
+            </div>
+            <div class="form-row">
+              <label for="newFaqAnswer">Answer</label>
+              <textarea id="newFaqAnswer" rows="3" placeholder="Enter answer..."></textarea>
+            </div>
+            <button class="btn primary" onclick="addNewFaq()">Add FAQ</button>
           </div>
         </div>
       </div>

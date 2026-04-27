@@ -5,6 +5,7 @@ const STORAGE_KEYS = {
   requests: 'facilityRequests',
   notifications: 'fmrmsNotifications',
   help: 'helpMessages',
+  faqs: 'fmrmsFaqs',
 };
 
 function debounce(fn, delay) {
@@ -264,6 +265,72 @@ function updateStudentCard() {
   updateSidebarProfile();
 }
 
+function renderStudentViewer() {
+  const profile = getProfile();
+  const values = {
+    studentProfileName: profile.name || '—',
+    studentProfileId: profile.studentId || '—',
+    studentProfileCourse: profile.course || '—',
+    studentProfileYear: profile.year || '—',
+    studentProfileEmail: profile.email || '—',
+    studentProfilePhone: profile.phone || '—',
+  };
+
+  Object.entries(values).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  });
+}
+
+function updateRequestHistory(request, action, note) {
+  request.history = request.history || [];
+  request.history.push({
+    status: request.status,
+    action,
+    note,
+    timestamp: Date.now(),
+  });
+}
+
+function approveRequest(id) {
+  const requests = getRequests();
+  const request = requests.find((item) => item.id === id);
+  if (!request) return;
+
+  request.status = 'Approved';
+  updateRequestHistory(request, 'Approved', 'Request approved by admin.');
+  saveRequests(requests);
+  addNotification(`Request "${request.title}" approved.`);
+  renderRequests();
+}
+
+function rejectRequest(id) {
+  const requests = getRequests();
+  const request = requests.find((item) => item.id === id);
+  if (!request) return;
+
+  request.status = 'Rejected';
+  updateRequestHistory(request, 'Rejected', 'Request rejected by admin.');
+  saveRequests(requests);
+  addNotification(`Request "${request.title}" rejected.`);
+  renderRequests();
+}
+
+function addRequestRemark(id) {
+  const requests = getRequests();
+  const request = requests.find((item) => item.id === id);
+  if (!request) return;
+
+  const remark = prompt('Enter remark for this request:', request.remark || '');
+  if (remark === null) return;
+
+  request.remark = remark.trim();
+  updateRequestHistory(request, 'Remark added', request.remark || 'Remark cleared.');
+  saveRequests(requests);
+  addNotification(`Remark updated for request "${request.title}".`);
+  renderRequests();
+}
+
 function initDashboard() {
   requireAuth();
   applySidebarState();
@@ -304,6 +371,7 @@ function initRequests() {
   updateUserGreeting();
   updateTopbarTitle();
   updateStudentCard();
+  renderStudentViewer();
   updateNotificationBadge();
 
   const today = new Date().toISOString().slice(0, 10);
@@ -324,8 +392,14 @@ function initHelp() {
   updateUserGreeting();
   updateTopbarTitle();
   updateStudentCard();
-  initFaqAccordion();
+  renderFaqs();
   updateNotificationBadge();
+
+  // Show admin FAQ controls if admin
+  const adminControls = document.getElementById('adminFaqControls');
+  if (adminControls && getUserRole() === 'ADMIN') {
+    adminControls.style.display = 'block';
+  }
 }
 
 function initFaqAccordion() {
@@ -453,22 +527,20 @@ function clearNotifications() {
 
 function updateDashboardStats() {
   const requests = getRequests();
+  const total = requests.length;
   const pending = requests.filter((r) => r.status === 'Pending').length;
-  const inProgress = requests.filter((r) => r.status === 'In Progress').length;
-  const completed = requests.filter((r) => r.status === 'Completed').length;
-  const cancelled = requests.filter((r) => r.status === 'Cancelled').length;
+  const approved = requests.filter((r) => r.status === 'Approved').length;
+  const rejected = requests.filter((r) => r.status === 'Rejected').length;
 
-  const pendingEl = document.getElementById('openCount');
-  const inProgressEl = document.getElementById('inProgressCount');
-  const resolvedEl = document.getElementById('resolvedCount');
+  const totalEl = document.getElementById('totalCount');
+  const pendingEl = document.getElementById('pendingCount');
+  const approvedEl = document.getElementById('approvedCount');
+  const rejectedEl = document.getElementById('rejectedCount');
 
+  if (totalEl) totalEl.textContent = String(total);
   if (pendingEl) pendingEl.textContent = String(pending);
-  if (inProgressEl) inProgressEl.textContent = String(inProgress);
-  if (resolvedEl) resolvedEl.textContent = String(completed);
-
-  if (resolvedEl && cancelled > 0) {
-    resolvedEl.textContent += ` (+${cancelled} cancelled)`;
-  }
+  if (approvedEl) approvedEl.textContent = String(approved);
+  if (rejectedEl) rejectedEl.textContent = String(rejected);
 
   // Keep charts in sync with current stats
   renderCharts();
@@ -493,6 +565,8 @@ function renderCharts() {
 function renderStatusChart(canvas, requests) {
   const counts = {
     Pending: 0,
+    Approved: 0,
+    Rejected: 0,
     'In Progress': 0,
     Completed: 0,
     Cancelled: 0,
@@ -504,9 +578,16 @@ function renderStatusChart(canvas, requests) {
     }
   });
 
-  const labels = ['Pending', 'In Progress', 'Completed', 'Cancelled'];
+  const labels = ['Pending', 'Approved', 'Rejected', 'In Progress', 'Completed', 'Cancelled'];
   const values = labels.map((label) => counts[label] || 0);
-  const colors = ['rgba(59, 130, 246, 0.9)', 'rgba(234, 179, 8, 0.9)', 'rgba(34, 197, 94, 0.9)', 'rgba(239, 68, 68, 0.9)'];
+  const colors = [
+    'rgba(59, 130, 246, 0.9)',
+    'rgba(16, 185, 129, 0.9)',
+    'rgba(239, 68, 68, 0.9)',
+    'rgba(234, 179, 8, 0.9)',
+    'rgba(34, 197, 94, 0.9)',
+    'rgba(107, 114, 128, 0.9)',
+  ];
 
   drawBarChart(canvas, labels, values, colors);
 }
@@ -700,6 +781,7 @@ function renderRequests() {
           request.issueType,
           request.description,
           request.status,
+          request.remark,
         ]
           .filter(Boolean)
           .join(' ')
@@ -707,6 +789,8 @@ function renderRequests() {
         return haystack.includes(filter);
       })
     : requests;
+
+  const isAdmin = getUserRole() === 'ADMIN';
 
   if (filteredRequests.length === 0) {
     list.innerHTML = '<li class="request-empty">No requests found. Try adjusting the filter.</li>';
@@ -720,6 +804,37 @@ function renderRequests() {
     const reported = request.reportedAt ? new Date(request.reportedAt).toLocaleString() : 'Unknown';
     const priority = String(request.priority || 'Medium');
     const priorityClass = priority.toLowerCase();
+    const remark = request.remark ? `<div class="request-status">Remark: ${escapeHtml(request.remark)}</div>` : '';
+    const historyRows = (request.history || [])
+      .map((entry) => `
+        <li>
+          <strong>${escapeHtml(entry.action)}</strong>
+          <span>(${new Date(entry.timestamp).toLocaleString()})</span>
+          <div>${escapeHtml(entry.note || entry.status)}</div>
+        </li>
+      `)
+      .join('');
+    const historySection = historyRows
+      ? `<details class="request-history"><summary>Request history</summary><ul>${historyRows}</ul></details>`
+      : '';
+
+    const adminStatusControls = request.status === 'Pending'
+      ? `
+          <button class="btn secondary" onclick="approveRequest(${request.id})">Approve</button>
+          <button class="btn secondary" onclick="rejectRequest(${request.id})">Reject</button>
+        `
+      : '';
+
+    const adminRemarkControl = isAdmin
+      ? `<button class="btn secondary" onclick="addRequestRemark(${request.id})">${request.remark ? 'Edit remark' : 'Add remark'}</button>`
+      : '';
+
+    const studentActions = !isAdmin
+      ? `
+          <button class="btn secondary" onclick="changeStatus(${request.id})">Progress</button>
+          ${request.status !== 'Cancelled' && request.status !== 'Completed' ? `<button class="btn secondary" onclick="cancelRequest(${request.id})">Cancel</button>` : ''}
+        `
+      : '';
 
     li.innerHTML = `
       <div class="request-label">
@@ -735,12 +850,15 @@ function renderRequests() {
         <div class="request-status">Status: <strong>${request.status}</strong></div>
         <div class="request-status">Reported: ${reported}</div>
         <div class="request-status">Due: ${dueDateStr}</div>
+        ${remark}
       </div>
       <div class="request-actions">
-        <button class="btn secondary" onclick="changeStatus(${request.id})">Progress</button>
-        ${request.status !== 'Cancelled' && request.status !== 'Completed' ? `<button class="btn secondary" onclick="cancelRequest(${request.id})">Cancel</button>` : ''}
+        ${adminStatusControls}
+        ${adminRemarkControl}
+        ${studentActions}
         <button class="btn secondary" onclick="removeRequest(${request.id})">Remove</button>
       </div>
+      ${historySection}
     `;
 
     list.appendChild(li);
@@ -793,6 +911,15 @@ function addRequest() {
     reportedAt,
     dueDate,
     notifiedDue: false,
+    remark: '',
+    history: [
+      {
+        status: 'Pending',
+        action: 'Created',
+        note: 'Request submitted',
+        timestamp: Date.now(),
+      },
+    ],
   });
 
   saveRequests(requests);
@@ -829,6 +956,7 @@ function changeStatus(id) {
 
   const nextStatus = getNextStatus(request.status);
   request.status = nextStatus;
+  updateRequestHistory(request, 'Status changed', `Moved to ${nextStatus}`);
   saveRequests(requests);
   addNotification(`Request "${request.title}" moved to ${nextStatus}.`);
   renderRequests();
@@ -840,6 +968,7 @@ function cancelRequest(id) {
   if (!request) return;
 
   request.status = 'Cancelled';
+  updateRequestHistory(request, 'Cancelled', 'Request was cancelled.');
   saveRequests(requests);
   renderRequests();
   addNotification(`Request "${request.title}" was cancelled.`);
@@ -902,6 +1031,119 @@ function sendHelpMessage() {
   message.value = '';
 }
 
+function getFaqs() {
+  const raw = localStorage.getItem(STORAGE_KEYS.faqs);
+  try {
+    return raw ? JSON.parse(raw) : [
+      {
+        id: 1,
+        question: 'How do I submit a maintenance request?',
+        answer: 'Go to the "Requests" page, fill out the form, and click "Create request".',
+      },
+      {
+        id: 2,
+        question: 'Can I cancel a request?',
+        answer: 'Yes — use the "Cancel" button on the request to stop it from moving forward.',
+      },
+      {
+        id: 3,
+        question: 'How do I get notifications?',
+        answer: 'Notifications appear in the bell icon when a request status changes or a due date is near.',
+      },
+    ];
+  } catch {
+    return [];
+  }
+}
+
+function saveFaqs(faqs) {
+  localStorage.setItem(STORAGE_KEYS.faqs, JSON.stringify(faqs));
+}
+
+function addFaq(question, answer) {
+  const faqs = getFaqs();
+  faqs.push({
+    id: Date.now(),
+    question: question.trim(),
+    answer: answer.trim(),
+  });
+  saveFaqs(faqs);
+}
+
+function editFaq(id, question, answer) {
+  const faqs = getFaqs();
+  const faq = faqs.find(f => f.id === id);
+  if (faq) {
+    faq.question = question.trim();
+    faq.answer = answer.trim();
+    saveFaqs(faqs);
+  }
+}
+
+function deleteFaq(id) {
+  const faqs = getFaqs().filter(f => f.id !== id);
+  saveFaqs(faqs);
+}
+
+function renderFaqs() {
+  const faqs = getFaqs();
+  const container = document.querySelector('.faq-section');
+  if (!container) return;
+
+  const isAdmin = getUserRole() === 'ADMIN';
+
+  container.innerHTML = faqs.map(faq => `
+    <div class="faq-item" data-id="${faq.id}">
+      <button class="faq-question" type="button" aria-expanded="false">${escapeHtml(faq.question)}</button>
+      <div class="faq-answer">${escapeHtml(faq.answer)}</div>
+      ${isAdmin ? `
+        <div class="faq-admin-controls">
+          <button class="btn secondary" onclick="editFaqMode(${faq.id})">Edit</button>
+          <button class="btn secondary" onclick="deleteFaq(${faq.id})">Delete</button>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+
+  initFaqAccordion();
+}
+
+function editFaqMode(id) {
+  const faqItem = document.querySelector(`.faq-item[data-id="${id}"]`);
+  if (!faqItem) return;
+
+  const question = faqItem.querySelector('.faq-question').textContent;
+  const answer = faqItem.querySelector('.faq-answer').textContent;
+
+  faqItem.innerHTML = `
+    <input type="text" class="faq-edit-question" value="${escapeHtml(question)}" />
+    <textarea class="faq-edit-answer">${escapeHtml(answer)}</textarea>
+    <div class="faq-admin-controls">
+      <button class="btn primary" onclick="saveFaqEdit(${id})">Save</button>
+      <button class="btn secondary" onclick="renderFaqs()">Cancel</button>
+    </div>
+  `;
+}
+
+function saveFaqEdit(id) {
+  const faqItem = document.querySelector(`.faq-item[data-id="${id}"]`);
+  const question = faqItem.querySelector('.faq-edit-question').value;
+  const answer = faqItem.querySelector('.faq-edit-answer').value;
+  editFaq(id, question, answer);
+  renderFaqs();
+}
+
+function addNewFaq() {
+  const question = document.getElementById('newFaqQuestion').value;
+  const answer = document.getElementById('newFaqAnswer').value;
+  if (question && answer) {
+    addFaq(question, answer);
+    document.getElementById('newFaqQuestion').value = '';
+    document.getElementById('newFaqAnswer').value = '';
+    renderFaqs();
+  }
+}
+
 function getHelpMessages() {
   const raw = localStorage.getItem(STORAGE_KEYS.help);
   try {
@@ -944,11 +1186,21 @@ if (typeof module !== 'undefined' && module.exports) {
     updateTopbarTitle,
     updateSidebarProfile,
     updateStudentCard,
+    renderStudentViewer,
     initDashboard,
     initProfile,
     initRequests,
     initHelp,
     initFaqAccordion,
+    getFaqs,
+    saveFaqs,
+    addFaq,
+    editFaq,
+    deleteFaq,
+    renderFaqs,
+    editFaqMode,
+    saveFaqEdit,
+    addNewFaq,
     initNotifications,
     getRequests,
     saveRequests,
@@ -973,6 +1225,9 @@ if (typeof module !== 'undefined' && module.exports) {
     getNextStatus,
     changeStatus,
     cancelRequest,
+    approveRequest,
+    rejectRequest,
+    addRequestRemark,
     removeRequest,
     clearResolved,
     checkDueDates,
