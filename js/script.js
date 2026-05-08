@@ -6,6 +6,9 @@ const STORAGE_KEYS = {
   notifications: 'fmrmsNotifications',
   help: 'helpMessages',
   faqs: 'fmrmsFaqs',
+  adminUsers: 'fmrmsAdminUsers',
+  facilities: 'fmrmsFacilities',
+  adminSettings: 'fmrmsAdminSettings',
 };
 
 function debounce(fn, delay) {
@@ -32,13 +35,21 @@ function getDefaultProfilePhoto() {
     );
 }
 
+function getRootPrefix() {
+  return window.location.pathname.includes('/admin/') ? '../' : '';
+}
+
+function getDashboardPathForRole(role) {
+  return role === 'ADMIN' ? `${getRootPrefix()}admin.html` : `${getRootPrefix()}index.html`;
+}
+
 function requireAuth() {
   if (window.location.pathname.endsWith('login.html')) {
     return;
   }
 
   if (localStorage.getItem(STORAGE_KEYS.auth) !== 'true') {
-    window.location = 'login.html';
+    window.location = `${getRootPrefix()}login.html`;
   }
 }
 
@@ -47,16 +58,1004 @@ function getUserRole() {
   return role === 'ADMIN' ? 'ADMIN' : 'STUDENT';
 }
 
+function isAdminPage() {
+  return window.location.pathname.endsWith('/admin.html') ||
+    window.location.pathname.endsWith('/user-management.html') ||
+    window.location.pathname.endsWith('/facility-management.html') ||
+    window.location.pathname.endsWith('/requests.html') ||
+    window.location.pathname.endsWith('/requests-oversight.html') ||
+    window.location.pathname.endsWith('/reports.html') ||
+    window.location.pathname.endsWith('/reports-analytics.html') ||
+    window.location.pathname.endsWith('/admin-notifications.html') ||
+    window.location.pathname.endsWith('/admin-settings.html') ||
+    window.location.pathname.includes('/admin/') ||
+    window.location.pathname.endsWith('admin/index.html');
+}
+
+function getAdminNavItems(prefix = '') {
+  return [
+    { key: 'dashboard', href: `${prefix}admin.html`, icon: 'tachometer-alt', label: 'Dashboard' },
+    { key: 'users', href: `${prefix}user-management.html`, icon: 'users', label: 'User Management' },
+    { key: 'facilities', href: `${prefix}facility-management.html`, icon: 'building', label: 'Facility Management' },
+    { key: 'requests', href: `${prefix}requests.html`, icon: 'clipboard-list', label: 'Requests Oversight' },
+    { key: 'reports', href: `${prefix}reports.html`, icon: 'chart-bar', label: 'Reports & Analytics' },
+    { key: 'notifications', href: `${prefix}admin-notifications.html`, icon: 'bell', label: 'Notifications' },
+    { key: 'settings', href: `${prefix}admin-settings.html`, icon: 'cog', label: 'Settings' },
+  ];
+}
+
+function getActiveAdminSection() {
+  const page = window.location.pathname.split('/').pop();
+  switch (page) {
+    case 'user-management.html':
+      return 'users';
+    case 'facility-management.html':
+      return 'facilities';
+    case 'requests.html':
+    case 'requests-oversight.html':
+      return 'requests';
+    case 'reports.html':
+    case 'reports-analytics.html':
+      return 'reports';
+    case 'admin-notifications.html':
+      return 'notifications';
+    case 'admin-settings.html':
+      return 'settings';
+    default:
+      return 'dashboard';
+  }
+}
+
+function initializeAdminShell(activeSection = getActiveAdminSection()) {
+  localStorage.setItem(STORAGE_KEYS.role, 'ADMIN');
+  applyAdminSettings();
+
+  const prefix = getRootPrefix();
+  const profile = getProfile();
+  const adminName = profile.adminName || 'Juan Miguel Reyes';
+  const adminAvatar = profile.adminAvatar || profile.photo || getDefaultProfilePhoto();
+  const navItems = getAdminNavItems(prefix);
+
+  const headerMarkup = `
+    <header class="admin-topbar">
+      <div class="admin-topbar-left">
+        <img class="admin-logo" src="${prefix}images/snsu logo.png" alt="SNSU Logo">
+        <div class="admin-info">
+          <div class="admin-name" id="adminName">${escapeHtml(adminName)}</div>
+          <div class="admin-role">Administrator</div>
+        </div>
+      </div>
+
+      <div class="admin-topbar-center">
+        <div class="search-container">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" class="search-input" placeholder="Search requests, users, facilities..." id="adminSearch">
+        </div>
+      </div>
+
+      <div class="admin-topbar-right">
+        <div class="admin-avatar-container">
+          <img id="adminAvatar" class="admin-avatar" src="${adminAvatar}" alt="Admin Avatar">
+          <div class="admin-status online"></div>
+        </div>
+      </div>
+    </header>
+  `;
+
+  const sidebarMarkup = `
+    <nav class="sidebar admin-sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="profile-block">
+          <img id="sidebarProfilePhoto" class="sidebar-avatar" src="${adminAvatar}" alt="Profile">
+          <div class="profile-info">
+            <div class="profile-name" id="sidebarProfileName">${escapeHtml(adminName)}</div>
+            <div class="profile-meta" id="sidebarProfileMeta">System Admin</div>
+          </div>
+        </div>
+
+        <ul class="nav">
+          ${navItems.map((item) => `
+            <li>
+              <a href="${item.href}" class="${item.key === activeSection ? 'active' : ''}">
+                <i class="fas fa-${item.icon} nav-icon"></i>
+                <span class="nav-label">${item.label}</span>
+              </a>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" type="button" onclick="logout()">
+          <i class="fas fa-sign-out-alt nav-icon"></i>
+          <span class="nav-label">Logout</span>
+        </button>
+      </div>
+    </nav>
+  `;
+
+  const existingHeader = document.querySelector('.admin-topbar');
+  if (existingHeader) {
+    existingHeader.outerHTML = headerMarkup;
+  } else {
+    document.body.insertAdjacentHTML('afterbegin', headerMarkup);
+  }
+
+  const layout = document.querySelector('.admin-layout');
+  const existingSidebar = document.querySelector('.admin-sidebar');
+  if (existingSidebar) {
+    existingSidebar.outerHTML = sidebarMarkup;
+  } else if (layout) {
+    layout.insertAdjacentHTML('afterbegin', sidebarMarkup);
+  }
+
+  initializeAdminSearch(prefix);
+}
+
+function initializeAdminSearch(prefix = '') {
+  const searchInput = document.getElementById('adminSearch');
+  if (!searchInput) return;
+
+  searchInput.addEventListener('input', debounce((event) => {
+    const query = event.target.value.trim();
+    if (query.length > 2) {
+      displayAdminSearchResults(getAdminSearchResults(query, prefix));
+    } else {
+      clearSearchResults();
+    }
+  }, 300));
+
+  searchInput.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    const firstResult = document.querySelector('.search-result-item');
+    if (firstResult) firstResult.click();
+  });
+}
+
+function getAdminSearchResults(query, prefix = '') {
+  const normalizedQuery = query.toLowerCase();
+  const results = [];
+  const requests = getRequests();
+
+  requests.forEach((request) => {
+    const haystack = [request.title, request.location, request.description, request.status].filter(Boolean).join(' ').toLowerCase();
+    if (haystack.includes(normalizedQuery)) {
+      results.push({
+        type: 'request',
+        title: request.title || request.location || 'Facility request',
+        subtitle: `Request #${request.id} - ${request.status || 'Pending'}`,
+        url: `${prefix}requests.html`,
+      });
+    }
+  });
+
+  if ('user management accounts staff student administrator'.includes(normalizedQuery) || normalizedQuery.includes('user')) {
+    results.push({ type: 'user', title: 'User Management', subtitle: 'Manage admin, staff, and student accounts', url: `${prefix}user-management.html` });
+  }
+
+  if ('facility building room location availability'.includes(normalizedQuery) || normalizedQuery.includes('facility') || normalizedQuery.includes('room')) {
+    results.push({ type: 'facility', title: 'Facility Management', subtitle: 'Manage locations and availability', url: `${prefix}facility-management.html` });
+  }
+
+  if ('reports analytics charts trends'.includes(normalizedQuery) || normalizedQuery.includes('report') || normalizedQuery.includes('chart')) {
+    results.push({ type: 'report', title: 'Reports & Analytics', subtitle: 'View usage and request trends', url: `${prefix}reports.html` });
+  }
+
+  return results.slice(0, 8);
+}
+
+function displayAdminSearchResults(results) {
+  clearSearchResults();
+  if (!results.length) return;
+
+  const resultsContainer = document.createElement('div');
+  resultsContainer.className = 'search-results';
+
+  results.forEach((result) => {
+    const resultItem = document.createElement('div');
+    resultItem.className = 'search-result-item';
+    resultItem.addEventListener('click', () => {
+      window.location.href = result.url;
+    });
+
+    resultItem.innerHTML = `
+      <div class="search-result-icon">
+        <i class="fas fa-${getSearchResultIcon(result.type)}"></i>
+      </div>
+      <div class="search-result-content">
+        <div class="search-result-title">${escapeHtml(result.title)}</div>
+        <div class="search-result-subtitle">${escapeHtml(result.subtitle)}</div>
+      </div>
+    `;
+
+    resultsContainer.appendChild(resultItem);
+  });
+
+  const searchContainer = document.querySelector('.search-container');
+  if (searchContainer) searchContainer.appendChild(resultsContainer);
+}
+
+function getSearchResultIcon(type) {
+  switch (type) {
+    case 'request': return 'clipboard-list';
+    case 'user': return 'user';
+    case 'facility': return 'building';
+    case 'report': return 'chart-bar';
+    default: return 'search';
+  }
+}
+
+function clearSearchResults() {
+  const results = document.querySelector('.search-results');
+  if (results) results.remove();
+}
+
+function updateAdminNotificationBadge() {
+  const badge = document.getElementById('adminNotifBadge');
+  if (!badge) return;
+
+  const notifications = getNotifications();
+  const unreadCount = notifications.filter((note) => !note.read).length || notifications.length;
+  if (unreadCount > 0) {
+    badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function initializePage() {
+  const role = getUserRole();
+  const isAdmin = isAdminPage();
+
+  // Update profile display based on role
+  updateProfileDisplay(role);
+
+  // Initialize appropriate dashboard
+  if (isAdmin) {
+    initializeAdminDashboard();
+  } else {
+    initializeStudentDashboard();
+  }
+}
+
+function updateProfileDisplay(role) {
+  const profileName = document.getElementById('sidebarProfileName');
+  const profileMeta = document.getElementById('sidebarProfileMeta');
+  const userName = document.getElementById('userName');
+  const userId = document.getElementById('userId');
+
+  if (role === 'ADMIN') {
+    if (profileName) profileName.textContent = 'Administrator';
+    if (profileMeta) profileMeta.textContent = 'System Admin';
+    if (userName) userName.textContent = 'Administrator';
+    if (userId) userId.textContent = 'Role: System Administrator';
+  } else {
+    const profile = getProfile();
+    const name = profile.name || 'Student';
+    const studentId = profile.studentId || '—';
+
+    if (profileName) profileName.textContent = name.split(' ')[0] || 'Student';
+    if (profileMeta) profileMeta.textContent = studentId;
+    if (userName) userName.textContent = name;
+    if (userId) userId.textContent = `ID: ${studentId}`;
+  }
+}
+
+function initializeAdminDashboard() {
+  // Load admin-specific data
+  loadAdminData();
+
+  // Initialize admin charts
+  renderAdminCharts();
+
+  // Load admin activity
+  renderAdminActivity();
+
+  // Render reusable admin tables when they are present on the dashboard.
+  renderUserManagement();
+  renderFacilityManagement();
+  renderAdminRequestsTable();
+}
+
+function initializeAdminUsersPage() {
+  initializeAdminShell('users');
+  requireAuth();
+  renderUserManagement();
+}
+
+function initializeAdminFacilitiesPage() {
+  initializeAdminShell('facilities');
+  requireAuth();
+  renderFacilityManagement();
+}
+
+function initializeAdminRequestsPage() {
+  initializeAdminShell('requests');
+  requireAuth();
+  renderAdminRequestsTable();
+}
+
+function initializeAdminReportsPage() {
+  initializeAdminShell('reports');
+  requireAuth();
+  renderAdminCharts();
+}
+
+function initializeAdminNotificationsPage() {
+  initializeAdminShell('notifications');
+  requireAuth();
+  renderAdminNotifications();
+}
+
+function initializeAdminSettingsPage() {
+  initializeAdminShell('settings');
+  requireAuth();
+  initializeSettingsTabs();
+  renderAdminSettings();
+}
+
+function initializeStudentDashboard() {
+  applyAdminSettings();
+
+  // Load student dashboard data
+  updateDashboardStats();
+  updateDashboardUserInfo();
+
+  // Initialize student charts
+  renderCharts();
+
+  // Load student activity
+  renderRecentRequests();
+  renderActivityFeed();
+}
+
+function loadAdminData() {
+  applyAdminSettings();
+
+  // Update admin summary cards with data from localStorage
+  const requests = getRequests();
+
+  // Total Users (mock data - in real app, would come from API)
+  const totalUsersEl = document.getElementById('totalUsers');
+  if (totalUsersEl) totalUsersEl.textContent = '156';
+
+  // Total Facilities (mock data - in real app, would come from API)
+  const totalFacilitiesEl = document.getElementById('totalFacilities');
+  if (totalFacilitiesEl) totalFacilitiesEl.textContent = '24';
+
+  // Pending Requests
+  const pendingEl = document.getElementById('pendingRequests');
+  if (pendingEl) {
+    const pending = requests.filter(r => r.status === 'Pending').length;
+    pendingEl.textContent = pending;
+  }
+
+  // In Progress Requests
+  const inProgressEl = document.getElementById('inProgressRequests');
+  if (inProgressEl) {
+    const inProgress = requests.filter(r => r.status === 'In Progress').length;
+    inProgressEl.textContent = inProgress;
+  }
+
+  // Completed Requests
+  const completedEl = document.getElementById('completedRequests');
+  if (completedEl) {
+    const completed = requests.filter(r => r.status === 'Completed').length;
+    completedEl.textContent = completed;
+  }
+
+  // Cancelled Requests
+  const cancelledEl = document.getElementById('cancelledRequests');
+  if (cancelledEl) {
+    const cancelled = requests.filter(r => r.status === 'Cancelled').length;
+    cancelledEl.textContent = cancelled;
+  }
+}
+
+function renderAdminCharts() {
+  if (typeof Chart === 'undefined') return;
+
+  const requests = getRequests();
+  const requestTrendLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+  const trendSeed = requests.length || 42;
+  const submittedData = requestTrendLabels.map((_, index) => Math.max(4, Math.round(trendSeed / 4) + index * 2));
+  const approvedData = submittedData.map((value, index) => Math.max(2, value - (index % 2 === 0 ? 3 : 5)));
+  const completedData = submittedData.map((value, index) => Math.max(1, value - (index % 2 === 0 ? 5 : 7)));
+
+  const trendsCanvas = document.getElementById('requestTrendsChart');
+  if (trendsCanvas) {
+    if (window.adminRequestTrendsChart) {
+      window.adminRequestTrendsChart.destroy();
+    }
+
+    const ctx = trendsCanvas.getContext('2d');
+    window.adminRequestTrendsChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: requestTrendLabels,
+        datasets: [{
+          label: 'Submitted',
+          data: submittedData,
+          borderColor: '#3498DB',
+          backgroundColor: 'rgba(52, 152, 219, 0.12)',
+          fill: true,
+          tension: 0.35
+        }, {
+          label: 'Approved',
+          data: approvedData,
+          borderColor: '#27AE60',
+          backgroundColor: 'rgba(39, 174, 96, 0.08)',
+          tension: 0.35
+        }, {
+          label: 'Completed',
+          data: completedData,
+          borderColor: '#2C3E50',
+          backgroundColor: 'rgba(44, 62, 80, 0.08)',
+          tension: 0.35
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
+          }
+        }
+      }
+    });
+  }
+
+  const facilityUsageCanvas = document.getElementById('facilityUsageChart');
+  if (facilityUsageCanvas) {
+    if (window.adminFacilityUsageChart) {
+      window.adminFacilityUsageChart.destroy();
+    }
+
+    const usageCounts = requests.reduce((acc, request) => {
+      const facility = request.location || request.title || 'General Facility';
+      acc[facility] = (acc[facility] || 0) + 1;
+      return acc;
+    }, {});
+    const usageEntries = Object.entries(usageCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const usageLabels = usageEntries.length
+      ? usageEntries.map(([facility]) => facility)
+      : ['Computer Lab A', 'Main Auditorium', 'Library Room', 'Gymnasium', 'Science Lab'];
+    const usageData = usageEntries.length
+      ? usageEntries.map(([, count]) => count)
+      : [32, 24, 18, 14, 12];
+
+    const ctx = facilityUsageCanvas.getContext('2d');
+    window.adminFacilityUsageChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: usageLabels,
+        datasets: [{
+          data: usageData,
+          backgroundColor: [
+            '#3498DB',
+            '#27AE60',
+            '#F1C40F',
+            '#E74C3C',
+            '#2C3E50'
+          ]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+          }
+        }
+      }
+    });
+  }
+}
+
+function renderAdminActivity() {
+  const feed = document.getElementById('adminActivityFeed');
+  if (!feed) return;
+
+  const requests = getRequests();
+  const fallbackActivity = [
+    {
+      title: 'Request approved',
+      detail: 'Computer Lab A maintenance request',
+      timestamp: Date.now() - 1000 * 60 * 12,
+      type: 'approval',
+    },
+    {
+      title: 'Request rejected',
+      detail: 'Auditorium reservation conflict',
+      timestamp: Date.now() - 1000 * 60 * 46,
+      type: 'cancellation',
+    },
+    {
+      title: 'New facility added',
+      detail: 'Library Conference Room',
+      timestamp: Date.now() - 1000 * 60 * 90,
+      type: 'update',
+    },
+  ];
+
+  const requestActivity = requests
+    .slice()
+    .sort((a, b) => new Date(b.updatedAt || b.reportedAt || 0) - new Date(a.updatedAt || a.reportedAt || 0))
+    .slice(0, 8)
+    .map((request) => {
+      const status = request.status || 'Pending';
+      return {
+        title: getActionFromStatus(status),
+        detail: request.location || request.title || 'Facility request',
+        timestamp: new Date(request.updatedAt || request.reportedAt || Date.now()).getTime(),
+        type: getActivityTypeFromStatus(status),
+      };
+    });
+
+  const activityItems = requestActivity.length ? requestActivity : fallbackActivity;
+
+  feed.innerHTML = activityItems.map((item) => `
+    <div class="activity-item">
+      <div class="activity-item-header">
+        <span class="activity-icon ${item.type}">
+          <i class="fas fa-${getActivityIcon(item.type)}"></i>
+        </span>
+        <div class="activity-content">
+          <h4>${escapeHtml(item.title)}</h4>
+          <p>${escapeHtml(item.detail)}</p>
+        </div>
+      </div>
+      <div class="activity-timestamp">${getTimeAgo(item.timestamp)} - ${new Date(item.timestamp).toLocaleString()}</div>
+    </div>
+  `).join('');
+}
+
+function getActionFromStatus(status) {
+  switch (status) {
+    case 'Pending': return 'New request submitted';
+    case 'Approved': return 'Request approved';
+    case 'Rejected': return 'Request rejected';
+    case 'In Progress': return 'Facility request updated';
+    case 'Completed': return 'Request completed';
+    case 'Cancelled': return 'Request cancelled';
+    default: return 'Updated Status';
+  }
+}
+
+function getActivityTypeFromStatus(status) {
+  switch (status) {
+    case 'Approved':
+    case 'Completed':
+      return 'approval';
+    case 'Rejected':
+    case 'Cancelled':
+      return 'cancellation';
+    case 'Pending':
+      return 'submission';
+    default:
+      return 'update';
+  }
+}
+
+function getStatusBadgeClass(status) {
+  const normalized = String(status || '').toLowerCase();
+  if (['active', 'available', 'approved', 'completed'].includes(normalized)) return 'status-completed';
+  if (['pending'].includes(normalized)) return 'status-pending';
+  if (['in use', 'in progress'].includes(normalized)) return 'status-inprogress';
+  if (['inactive', 'unavailable', 'rejected', 'cancelled'].includes(normalized)) return 'status-cancelled';
+  return 'status-inprogress';
+}
+
+function applyAdminSettings() {
+  const settings = getAdminSettings();
+  const root = document.documentElement;
+  const body = document.body;
+
+  if (settings.accentColor) {
+    root.style.setProperty('--accent', settings.accentColor);
+    root.style.setProperty('--primary-2', settings.accentColor);
+  }
+
+  if (body) {
+    body.classList.toggle('density-compact', settings.dashboardDensity === 'Compact');
+  }
+
+  const activityPanel = document.querySelector('.admin-activity-panel');
+  if (activityPanel) {
+    activityPanel.style.display = settings.showActivityPanel === false ? 'none' : '';
+  }
+
+  const metricSections = document.querySelectorAll('.admin-summary-grid, .metrics-list');
+  metricSections.forEach((section) => {
+    section.style.display = settings.showMetricCards === false ? 'none' : '';
+  });
+}
+
+function canManageUsers() {
+  return getAdminSettings().permManageUsers !== false;
+}
+
+function canManageFacilities() {
+  return getAdminSettings().permManageFacilities !== false;
+}
+
+function canApproveRequests() {
+  return getAdminSettings().permApproveRequests !== false;
+}
+
+function canExportReports() {
+  return getAdminSettings().permExportReports !== false;
+}
+
+function renderUserManagement() {
+  const tbody = document.getElementById('userManagementBody');
+  if (!tbody) return;
+
+  const users = getAdminUsers();
+  tbody.innerHTML = users.map((user) => `
+    <tr>
+      <td>${escapeHtml(user.id)}</td>
+      <td>${escapeHtml(user.name)}</td>
+      <td>${escapeHtml(user.role)}</td>
+      <td><span class="status-badge ${getStatusBadgeClass(user.status)}">${escapeHtml(user.status)}</span></td>
+      <td>
+        <div class="action-buttons">
+          <button class="edit" type="button" onclick="editAdminUser('${escapeHtml(user.id)}')">Edit</button>
+          <button class="delete" type="button" onclick="deleteAdminUser('${escapeHtml(user.id)}')">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function addAdminUser() {
+  if (!canManageUsers()) {
+    alert('User management changes are disabled in Settings.');
+    return;
+  }
+
+  const name = prompt('User name:');
+  if (!name) return;
+  const role = prompt('Role:', 'Student') || 'Student';
+  const status = prompt('Status:', 'Active') || 'Active';
+  const users = getAdminUsers();
+  users.push({
+    id: `USR-${Date.now().toString().slice(-3)}`,
+    name: name.trim(),
+    role: role.trim(),
+    status: status.trim(),
+  });
+  saveAdminUsers(users);
+  addNotification(`User added: ${name.trim()}`);
+  renderUserManagement();
+}
+
+function editAdminUser(id) {
+  if (!canManageUsers()) {
+    alert('User management changes are disabled in Settings.');
+    return;
+  }
+
+  const users = getAdminUsers();
+  const user = users.find((item) => item.id === id);
+  if (!user) return;
+
+  const name = prompt('User name:', user.name);
+  if (name === null) return;
+  const role = prompt('Role:', user.role);
+  if (role === null) return;
+  const status = prompt('Status:', user.status);
+  if (status === null) return;
+
+  user.name = name.trim() || user.name;
+  user.role = role.trim() || user.role;
+  user.status = status.trim() || user.status;
+  saveAdminUsers(users);
+  addNotification(`User updated: ${user.name}`);
+  renderUserManagement();
+}
+
+function deleteAdminUser(id) {
+  if (!canManageUsers()) {
+    alert('User deletion is disabled in Settings.');
+    return;
+  }
+
+  const users = getAdminUsers();
+  const user = users.find((item) => item.id === id);
+  if (!user) return;
+  if (!confirm(`Delete user ${user.name}?`)) return;
+
+  saveAdminUsers(users.filter((item) => item.id !== id));
+  addNotification(`User deleted: ${user.name}`);
+  renderUserManagement();
+}
+
+function renderFacilityManagement() {
+  const tbody = document.getElementById('facilityManagementBody');
+  if (!tbody) return;
+
+  const facilities = getFacilities();
+  tbody.innerHTML = facilities.map((facility) => `
+    <tr>
+      <td>${escapeHtml(facility.id)}</td>
+      <td>${escapeHtml(facility.name)}</td>
+      <td>${escapeHtml(facility.location)}</td>
+      <td><span class="status-badge ${getStatusBadgeClass(facility.availability)}">${escapeHtml(facility.availability)}</span></td>
+      <td>
+        <div class="action-buttons">
+          <button class="edit" type="button" onclick="editFacility('${escapeHtml(facility.id)}')">Edit</button>
+          <button class="delete" type="button" onclick="deleteFacility('${escapeHtml(facility.id)}')">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function addFacility() {
+  if (!canManageFacilities()) {
+    alert('Facility management changes are disabled in Settings.');
+    return;
+  }
+
+  const name = prompt('Facility name:');
+  if (!name) return;
+  const location = prompt('Location:', 'Campus') || 'Campus';
+  const availability = prompt('Availability:', 'Available') || 'Available';
+  const facilities = getFacilities();
+  facilities.push({
+    id: `FAC-${Date.now().toString().slice(-3)}`,
+    name: name.trim(),
+    location: location.trim(),
+    availability: availability.trim(),
+  });
+  saveFacilities(facilities);
+  addNotification(`New facility added: ${name.trim()}`, 'facilityChange');
+  renderFacilityManagement();
+}
+
+function editFacility(id) {
+  if (!canManageFacilities()) {
+    alert('Facility management changes are disabled in Settings.');
+    return;
+  }
+
+  const facilities = getFacilities();
+  const facility = facilities.find((item) => item.id === id);
+  if (!facility) return;
+
+  const name = prompt('Facility name:', facility.name);
+  if (name === null) return;
+  const location = prompt('Location:', facility.location);
+  if (location === null) return;
+  const availability = prompt('Availability:', facility.availability);
+  if (availability === null) return;
+
+  facility.name = name.trim() || facility.name;
+  facility.location = location.trim() || facility.location;
+  facility.availability = availability.trim() || facility.availability;
+  saveFacilities(facilities);
+  addNotification(`Facility updated: ${facility.name}`, 'facilityChange');
+  renderFacilityManagement();
+}
+
+function deleteFacility(id) {
+  if (!canManageFacilities()) {
+    alert('Facility deletion is disabled in Settings.');
+    return;
+  }
+
+  const facilities = getFacilities();
+  const facility = facilities.find((item) => item.id === id);
+  if (!facility) return;
+  if (!confirm(`Delete facility ${facility.name}?`)) return;
+
+  saveFacilities(facilities.filter((item) => item.id !== id));
+  addNotification(`Facility removed: ${facility.name}`, 'facilityChange');
+  renderFacilityManagement();
+}
+
+function renderAdminRequestsTable() {
+  const tbody = document.getElementById('adminRequestsBody');
+  if (!tbody) return;
+
+  const requests = getRequests();
+  if (!requests.length) {
+    tbody.innerHTML = `
+      <tr class="empty-state">
+        <td colspan="5" style="text-align: center; padding: 32px;">No student requests yet.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = requests.map((request) => {
+    const status = request.status || 'Pending';
+    const date = request.reportedAt ? new Date(request.reportedAt).toLocaleDateString() : 'Not set';
+    const decisionButtons = status === 'Pending'
+      ? `<button class="approve" type="button" onclick="approveRequest(${request.id})">Approve</button><button class="reject" type="button" onclick="rejectRequest(${request.id})">Reject</button>`
+      : '';
+
+    return `
+      <tr>
+        <td>${escapeHtml(String(request.id))}</td>
+        <td>${escapeHtml(request.location || request.title || 'Facility request')}</td>
+        <td>${escapeHtml(date)}</td>
+        <td><span class="status-badge ${getStatusBadgeClass(status)}">${escapeHtml(status)}</span></td>
+        <td>
+          <div class="action-buttons">
+            ${decisionButtons}
+            <button class="view" type="button" onclick="viewRequest(${request.id})">View</button>
+            <button class="edit" type="button" onclick="addRequestRemark(${request.id})">Remark</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderAdminNotifications() {
+  const feed = document.getElementById('adminNotificationsFeed');
+  if (!feed) return;
+
+  const notifications = getNotifications();
+  if (!notifications.length) {
+    feed.innerHTML = '<div class="activity-empty"><i class="fas fa-clock"></i><p>No notifications yet.</p></div>';
+    return;
+  }
+
+  feed.innerHTML = notifications.map((note) => `
+    <div class="activity-item">
+      <div class="activity-item-header">
+        <span class="activity-icon update"><i class="fas fa-bell"></i></span>
+        <div class="activity-content">
+          <h4>System notification</h4>
+          <p>${escapeHtml(note.message)}</p>
+        </div>
+      </div>
+      <div class="activity-timestamp">${note.createdAt ? new Date(note.createdAt).toLocaleString() : 'Recently'}</div>
+    </div>
+  `).join('');
+}
+
+function renderAdminSettings() {
+  const settings = getAdminSettings();
+  const fields = [
+    'adminDisplayName',
+    'adminEmail',
+    'sessionTimeout',
+    'defaultStatus',
+    'defaultPriority',
+    'autoArchiveDays',
+    'notificationDigest',
+    'reportRange',
+    'reportFormat',
+    'dashboardDensity',
+    'accentColor',
+  ];
+  const checks = [
+    'requireStrongPassword',
+    'allowStudentCancel',
+    'permApproveRequests',
+    'permManageFacilities',
+    'permManageUsers',
+    'permExportReports',
+    'notifyNewRequest',
+    'notifyDueSoon',
+    'notifyFacilityChange',
+    'includeCharts',
+    'includeActivityLog',
+    'showActivityPanel',
+    'showMetricCards',
+  ];
+
+  fields.forEach((id) => {
+    const input = document.getElementById(id);
+    if (input && settings[id] !== undefined) input.value = settings[id];
+  });
+
+  checks.forEach((id) => {
+    const input = document.getElementById(id);
+    if (input) input.checked = Boolean(settings[id]);
+  });
+}
+
+function saveAdminSettingsFromForm() {
+  const current = getAdminSettings();
+  const fieldIds = [
+    'adminDisplayName',
+    'adminEmail',
+    'sessionTimeout',
+    'defaultStatus',
+    'defaultPriority',
+    'autoArchiveDays',
+    'notificationDigest',
+    'reportRange',
+    'reportFormat',
+    'dashboardDensity',
+    'accentColor',
+  ];
+  const checkboxIds = [
+    'requireStrongPassword',
+    'allowStudentCancel',
+    'permApproveRequests',
+    'permManageFacilities',
+    'permManageUsers',
+    'permExportReports',
+    'notifyNewRequest',
+    'notifyDueSoon',
+    'notifyFacilityChange',
+    'includeCharts',
+    'includeActivityLog',
+    'showActivityPanel',
+    'showMetricCards',
+  ];
+  const next = { ...current };
+
+  fieldIds.forEach((id) => {
+    const input = document.getElementById(id);
+    if (input) next[id] = input.value;
+  });
+
+  checkboxIds.forEach((id) => {
+    const input = document.getElementById(id);
+    if (input) next[id] = input.checked;
+  });
+
+  saveAdminSettings(next);
+  const profile = getProfile();
+  if (next.adminDisplayName) {
+    localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify({ ...profile, adminName: next.adminDisplayName }));
+  }
+  addNotification('Admin settings updated.');
+  alert('Settings saved.');
+  initializeAdminShell('settings');
+  initializeSettingsTabs();
+  renderAdminSettings();
+}
+
+function initializeSettingsTabs() {
+  const tabs = document.querySelectorAll('[data-settings-tab]');
+  const panels = document.querySelectorAll('[data-settings-panel]');
+  if (!tabs.length || !panels.length) return;
+
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const key = tab.getAttribute('data-settings-tab');
+      tabs.forEach((item) => item.classList.toggle('active', item === tab));
+      panels.forEach((panel) => {
+        panel.classList.toggle('active', panel.getAttribute('data-settings-panel') === key);
+      });
+    });
+  });
+}
+
 function login() {
   const user = document.getElementById('username').value.trim();
   const pass = document.getElementById('password').value;
   const normalizedUser = user.toLowerCase();
 
   if ((normalizedUser === 'student' || normalizedUser === 'admin') && pass === '1234') {
+    const role = normalizedUser === 'admin' ? 'ADMIN' : 'STUDENT';
     localStorage.setItem(STORAGE_KEYS.auth, 'true');
-    localStorage.setItem(STORAGE_KEYS.role, normalizedUser === 'admin' ? 'ADMIN' : 'STUDENT');
-    localStorage.setItem('username', normalizedUser === 'admin' ? 'ADMIN' : 'student');
-    window.location = 'index.html';
+    localStorage.setItem(STORAGE_KEYS.role, role);
+    localStorage.setItem('username', role === 'ADMIN' ? 'ADMIN' : 'student');
+    window.location = getDashboardPathForRole(role);
     return;
   }
 
@@ -67,7 +1066,7 @@ function logout() {
   localStorage.removeItem(STORAGE_KEYS.auth);
   localStorage.removeItem(STORAGE_KEYS.role);
   localStorage.removeItem('username');
-  window.location = 'login.html';
+  window.location = `${getRootPrefix()}login.html`;
 }
 
 function getSidebarOpen() {
@@ -293,6 +1292,11 @@ function updateRequestHistory(request, action, note) {
 }
 
 function approveRequest(id) {
+  if (!canApproveRequests()) {
+    alert('Approving requests is disabled in Settings.');
+    return;
+  }
+
   const requests = getRequests();
   const request = requests.find((item) => item.id === id);
   if (!request) return;
@@ -302,9 +1306,16 @@ function approveRequest(id) {
   saveRequests(requests);
   addNotification(`Request "${request.title}" approved.`);
   renderRequests();
+  renderAdminRequestsTable();
+  renderAdminNotifications();
 }
 
 function rejectRequest(id) {
+  if (!canApproveRequests()) {
+    alert('Rejecting requests is disabled in Settings.');
+    return;
+  }
+
   const requests = getRequests();
   const request = requests.find((item) => item.id === id);
   if (!request) return;
@@ -314,6 +1325,8 @@ function rejectRequest(id) {
   saveRequests(requests);
   addNotification(`Request "${request.title}" rejected.`);
   renderRequests();
+  renderAdminRequestsTable();
+  renderAdminNotifications();
 }
 
 function addRequestRemark(id) {
@@ -329,6 +1342,7 @@ function addRequestRemark(id) {
   saveRequests(requests);
   addNotification(`Remark updated for request "${request.title}".`);
   renderRequests();
+  renderAdminRequestsTable();
 }
 
 function initDashboard() {
@@ -338,16 +1352,22 @@ function initDashboard() {
   updateUserGreeting();
   updateTopbarTitle();
   updateStudentCard();
-  updateDashboardUserInfo();
-  updateDashboardStats();
-  renderCharts();
   updateNotificationBadge();
   checkDueDates();
+
+  // Initialize page based on role and current page
+  initializePage();
 
   let resizeTimeout;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(renderCharts, 120);
+    resizeTimeout = setTimeout(() => {
+      if (isAdminPage()) {
+        renderAdminCharts();
+      } else {
+        renderCharts();
+      }
+    }, 120);
   });
 
   setInterval(checkDueDates, 60_000);
@@ -367,6 +1387,13 @@ function initProfile() {
 
 function initRequests() {
   requireAuth();
+  applyAdminSettings();
+
+  if (getUserRole() === 'ADMIN') {
+    window.location = 'requests.html';
+    return;
+  }
+
   applySidebarState();
   setActiveNav();
   updateUserGreeting();
@@ -379,6 +1406,12 @@ function initRequests() {
   const requestDate = document.getElementById('requestDate');
   if (requestDate && !requestDate.value) {
     requestDate.value = today;
+  }
+
+  const settings = getAdminSettings();
+  const prioritySelect = document.getElementById('requestPriority');
+  if (prioritySelect && settings.defaultPriority) {
+    prioritySelect.value = settings.defaultPriority;
   }
 
   renderRequests();
@@ -461,11 +1494,88 @@ function getNotifications() {
   }
 }
 
+function getAdminUsers() {
+  const raw = localStorage.getItem(STORAGE_KEYS.adminUsers);
+  try {
+    return raw ? JSON.parse(raw) : [
+      { id: 'USR-001', name: 'Juan Miguel Reyes', role: 'Administrator', status: 'Active' },
+      { id: 'USR-104', name: 'Maria Santos', role: 'Staff', status: 'Active' },
+      { id: 'USR-217', name: 'Carlo Medina', role: 'Student', status: 'Pending' },
+    ];
+  } catch {
+    return [];
+  }
+}
+
+function saveAdminUsers(users) {
+  localStorage.setItem(STORAGE_KEYS.adminUsers, JSON.stringify(users));
+}
+
+function getFacilities() {
+  const raw = localStorage.getItem(STORAGE_KEYS.facilities);
+  try {
+    return raw ? JSON.parse(raw) : [
+      { id: 'FAC-010', name: 'Computer Lab A', location: 'Building B, Room 201', availability: 'Available' },
+      { id: 'FAC-018', name: 'Main Auditorium', location: 'Admin Building', availability: 'In Use' },
+      { id: 'FAC-024', name: 'Library Conference Room', location: 'Library, 2nd Floor', availability: 'Unavailable' },
+    ];
+  } catch {
+    return [];
+  }
+}
+
+function saveFacilities(facilities) {
+  localStorage.setItem(STORAGE_KEYS.facilities, JSON.stringify(facilities));
+}
+
+function getAdminSettings() {
+  const raw = localStorage.getItem(STORAGE_KEYS.adminSettings);
+  try {
+    return raw ? JSON.parse(raw) : {
+      adminDisplayName: 'Juan Miguel Reyes',
+      defaultStatus: 'Pending',
+      defaultPriority: 'Medium',
+      adminEmail: 'admin@snsu.edu.ph',
+      sessionTimeout: '30',
+      requireStrongPassword: true,
+      autoArchiveDays: '30',
+      allowStudentCancel: true,
+      permApproveRequests: true,
+      permManageFacilities: true,
+      permManageUsers: true,
+      permExportReports: false,
+      notifyNewRequest: true,
+      notifyDueSoon: true,
+      notifyFacilityChange: true,
+      notificationDigest: 'Instant',
+      reportRange: 'Last 30 days',
+      reportFormat: 'PDF',
+      includeCharts: true,
+      includeActivityLog: true,
+      dashboardDensity: 'Comfortable',
+      accentColor: '#3498DB',
+      showActivityPanel: true,
+      showMetricCards: true,
+    };
+  } catch {
+    return {};
+  }
+}
+
+function saveAdminSettings(settings) {
+  localStorage.setItem(STORAGE_KEYS.adminSettings, JSON.stringify(settings));
+}
+
 function saveNotifications(items) {
   localStorage.setItem(STORAGE_KEYS.notifications, JSON.stringify(items));
 }
 
-function addNotification(message) {
+function addNotification(message, type = 'general') {
+  const settings = getAdminSettings();
+  if (type === 'newRequest' && settings.notifyNewRequest === false) return;
+  if (type === 'dueSoon' && settings.notifyDueSoon === false) return;
+  if (type === 'facilityChange' && settings.notifyFacilityChange === false) return;
+
   const notifications = getNotifications();
   notifications.unshift({
     id: Date.now(),
@@ -549,6 +1659,8 @@ function updateDashboardStats() {
 
   // Keep charts in sync with current stats
   renderCharts();
+  renderRecentRequests();
+  renderActivityFeed();
 }
 
 function updateDashboardUserInfo() {
@@ -875,6 +1987,153 @@ function renderAnalyticsMetrics(requests) {
   if (avgRequestsPerDayEl) avgRequestsPerDayEl.textContent = String(avgRequestsPerDay);
 }
 
+function renderRecentRequests() {
+  const requests = getRequests();
+  const tbody = document.getElementById('recentRequestsBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+
+  if (!requests.length) {
+    tbody.innerHTML = `
+      <tr class="empty-state">
+        <td colspan="6" style="text-align: center; padding: 32px;">
+          <i class="fas fa-inbox" style="font-size: 2.5rem; color: var(--muted); margin-bottom: 12px;"></i>
+          <p style="color: var(--muted); margin: 8px 0 0 0;">No requests yet. Create your first maintenance request!</p>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  const recentRequests = requests.slice(0, 8);
+
+  recentRequests.forEach((request) => {
+    const row = document.createElement('tr');
+    const reportedDate = request.reportedAt ? new Date(request.reportedAt).toLocaleDateString() : '—';
+    const statusClass = `status-${String(request.status || 'Pending').toLowerCase().replace(/\s+/g, '')}`;
+    const statusLabel = request.status || 'Pending';
+
+    row.innerHTML = `
+      <td>${escapeHtml(String(request.id || '—'))}</td>
+      <td>${escapeHtml(request.title || request.location || '—')}</td>
+      <td>${escapeHtml(request.location || '—')}</td>
+      <td>${escapeHtml(reportedDate)}</td>
+      <td><span class="status-badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
+      <td>
+        <div class="action-buttons">
+          <button type="button" class="view" onclick="viewRequest(${request.id})">View</button>
+          <button type="button" class="edit" onclick="editRequest(${request.id})">Edit</button>
+        </div>
+      </td>
+    `;
+
+    tbody.appendChild(row);
+  });
+}
+
+function renderActivityFeed() {
+  const feed = document.getElementById('activityFeed');
+  if (!feed) return;
+
+  const requests = getRequests();
+
+  if (!requests.length) {
+    feed.innerHTML = `
+      <div class="activity-empty">
+        <i class="fas fa-clock" style="font-size: 2rem; color: var(--muted); margin-bottom: 12px;"></i>
+        <p style="color: var(--muted); margin: 0;">No recent activity</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Sort requests by most recent first and take the latest 10
+  const recentActivity = requests
+    .sort((a, b) => (b.updatedAt || b.reportedAt || 0) - (a.updatedAt || a.reportedAt || 0))
+    .slice(0, 10);
+
+  const activityItems = recentActivity.map(request => {
+    const timestamp = request.updatedAt || request.reportedAt;
+    const timeAgo = timestamp ? getTimeAgo(timestamp) : 'Recently';
+    const status = request.status || 'Pending';
+    const title = request.title || request.location || 'Maintenance Request';
+
+    let activityType = 'submission';
+    let activityText = 'New request submitted';
+    let iconClass = 'submission';
+
+    if (status === 'Completed') {
+      activityType = 'approval';
+      activityText = 'Request completed';
+      iconClass = 'approval';
+    } else if (status === 'In Progress') {
+      activityType = 'update';
+      activityText = 'Request status updated';
+      iconClass = 'update';
+    } else if (status === 'Cancelled') {
+      activityType = 'cancellation';
+      activityText = 'Request cancelled';
+      iconClass = 'cancellation';
+    }
+
+    return `
+      <div class="activity-item">
+        <div class="activity-item-header">
+          <div class="activity-icon ${iconClass}">
+            <i class="fas fa-${getActivityIcon(iconClass)}"></i>
+          </div>
+          <div class="activity-content">
+            <h4>${escapeHtml(title)}</h4>
+            <p>${activityText}</p>
+          </div>
+        </div>
+        <div class="activity-timestamp">${timeAgo}</div>
+      </div>
+    `;
+  }).join('');
+
+  feed.innerHTML = activityItems;
+}
+
+function getActivityIcon(type) {
+  switch (type) {
+    case 'approval': return 'check-circle';
+    case 'submission': return 'plus-circle';
+    case 'cancellation': return 'times-circle';
+    case 'update': return 'sync-alt';
+    default: return 'circle';
+  }
+}
+
+function getTimeAgo(timestamp) {
+  const now = Date.now();
+  const diff = now - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return new Date(timestamp).toLocaleDateString();
+}
+
+function viewRequest(id) {
+  const requests = getRequests();
+  const request = requests.find((item) => item.id === id);
+  if (!request) return;
+  alert(`View request #${id}: ${request.title || request.location}`);
+}
+
+function editRequest(id) {
+  const requests = getRequests();
+  const request = requests.find((item) => item.id === id);
+  if (!request) return;
+  alert(`Edit request #${id}: ${request.title || request.location}`);
+}
+
 function drawBarChart(canvas, labels, values, colors) {
   const ctx = setCanvasDpi(canvas);
   const rect = canvas.getBoundingClientRect();
@@ -1090,7 +2349,7 @@ function renderRequests() {
     const studentActions = !isAdmin
       ? `
           <button class="btn secondary" onclick="changeStatus(${request.id})">Progress</button>
-          ${request.status !== 'Cancelled' && request.status !== 'Completed' ? `<button class="btn secondary" onclick="cancelRequest(${request.id})">Cancel</button>` : ''}
+          ${getAdminSettings().allowStudentCancel !== false && request.status !== 'Cancelled' && request.status !== 'Completed' ? `<button class="btn secondary" onclick="cancelRequest(${request.id})">Cancel</button>` : ''}
         `
       : '';
 
@@ -1132,6 +2391,11 @@ function renderRequests() {
 }
 
 function addRequest() {
+  if (getUserRole() !== 'STUDENT') {
+    alert('Only student accounts can create facility requests.');
+    return;
+  }
+
   const titleInput = document.getElementById('requestTitle');
   const locationInput = document.getElementById('requestLocation');
   const typeSelect = document.getElementById('requestType');
@@ -1151,7 +2415,8 @@ function addRequest() {
   const description = descriptionInput.value.trim();
   const reportedAt = new Date(dateInput.value || new Date().toISOString()).toISOString();
   const dueDate = dueInput.value ? new Date(dueInput.value).toISOString() : '';
-  const priority = prioritySelect.value;
+  const settings = getAdminSettings();
+  const priority = prioritySelect.value || settings.defaultPriority || 'Medium';
 
   if (!title || !location || !description) {
     alert('Please fill in the request title, location, and description.');
@@ -1166,7 +2431,7 @@ function addRequest() {
     issueType,
     description,
     priority,
-    status: 'Pending',
+    status: settings.defaultStatus || 'Pending',
     reportedAt,
     dueDate,
     notifiedDue: false,
@@ -1182,7 +2447,7 @@ function addRequest() {
   });
 
   saveRequests(requests);
-  addNotification(`New request created: ${title} (Status: Pending)`);
+  addNotification(`New request created: ${title} (Status: ${settings.defaultStatus || 'Pending'})`, 'newRequest');
   renderRequests();
 
   titleInput.value = '';
@@ -1190,7 +2455,7 @@ function addRequest() {
   descriptionInput.value = '';
   dateInput.value = new Date().toISOString().slice(0, 10);
   dueInput.value = '';
-  prioritySelect.value = 'Medium';
+  prioritySelect.value = settings.defaultPriority || 'Medium';
 }
 
 function getNextStatus(status) {
@@ -1222,6 +2487,11 @@ function changeStatus(id) {
 }
 
 function cancelRequest(id) {
+  if (getUserRole() === 'STUDENT' && getAdminSettings().allowStudentCancel === false) {
+    alert('Student cancellation is disabled by the administrator.');
+    return;
+  }
+
   const requests = getRequests();
   const request = requests.find((item) => item.id === id);
   if (!request) return;
@@ -1259,7 +2529,7 @@ function checkDueDates() {
 
     const due = new Date(request.dueDate).getTime();
     if (due - now <= twoDays && due - now >= 0 && !request.notifiedDue) {
-      addNotification(`Request "${request.title}" is due soon (${new Date(request.dueDate).toLocaleDateString()}).`);
+      addNotification(`Request "${request.title}" is due soon (${new Date(request.dueDate).toLocaleDateString()}).`, 'dueSoon');
       request.notifiedDue = true;
     }
   });
@@ -1495,3 +2765,4 @@ if (typeof module !== 'undefined' && module.exports) {
     escapeHtml,
   };
 }
+

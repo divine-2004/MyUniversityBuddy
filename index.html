@@ -29,13 +29,18 @@
           <li><a href="index.html"><i class="fas fa-tachometer-alt nav-icon"></i><span class="nav-label">Dashboard</span></a></li>
           <li><a href="profile.html"><i class="fas fa-user nav-icon"></i><span class="nav-label">My Profile</span></a></li>
           <li><a href="notes.html"><i class="fas fa-list nav-icon"></i><span class="nav-label">My Requests</span></a></li>
-          <li><a href="#"><i class="fas fa-plus nav-icon"></i><span class="nav-label">Create Request</span></a></li>
-          <li><a href="#"><i class="fas fa-building nav-icon"></i><span class="nav-label">Facility List</span></a></li>
-          <li><a href="#"><i class="fas fa-calendar nav-icon"></i><span class="nav-label">Calendar</span></a></li>
+          <li><a href="notes.html"><i class="fas fa-plus nav-icon"></i><span class="nav-label">Create Request</span></a></li>
+
+          <li><a href="student/facility-list.html"><i class="fas fa-building nav-icon"></i><span class="nav-label">Facility List</span></a></li>
+
+          <li><a href="student/calendar.html"><i class="fas fa-calendar nav-icon"></i><span class="nav-label">Calendar</span></a></li>
+
           <li><a href="notifications.html"><i class="fas fa-bell nav-icon"></i><span class="nav-label">Notifications</span></a></li>
-          <li><a href="#"><i class="fas fa-chart-bar nav-icon"></i><span class="nav-label">Reports</span></a></li>
+          <li><a href="student/reports.html"><i class="fas fa-chart-bar nav-icon"></i><span class="nav-label">Reports</span></a></li>
+
           <li><a href="help.html"><i class="fas fa-question-circle nav-icon"></i><span class="nav-label">FAQ</span></a></li>
-          <li><a href="#"><i class="fas fa-cog nav-icon"></i><span class="nav-label">Settings</span></a></li>
+          <li><a href="student/settings.html"><i class="fas fa-cog nav-icon"></i><span class="nav-label">Settings</span></a></li>
+
         </ul>
       </div>
 
@@ -174,17 +179,73 @@
         </div>
       </section>
 
-      <!-- Quick Actions Section -->
-      <section class="quick-actions-section">
-        <div class="card">
-          <div class="card-header">
-            <h3><i class="fas fa-lightning-bolt"></i> Quick actions</h3>
-            <span class="card-note">Jumpstart your workflow</span>
+      <!-- Quick Links Section -->
+      <section class="quick-links-section">
+        <div class="section-header">
+          <h2><i class="fas fa-bolt"></i> Quick Access</h2>
+          <p>Fast navigation to key features</p>
+        </div>
+
+        <div class="quick-links-grid">
+          <div class="quick-link-card" onclick="window.location.href='notes.html'">
+            <div class="quick-link-icon">
+              <i class="fas fa-plus"></i>
+            </div>
+            <div class="quick-link-content">
+              <h4>Create Request</h4>
+              <p>Submit a new maintenance request</p>
+            </div>
           </div>
-          <ul class="quick-links">
-            <li><a href="notes.html"><i class="fas fa-plus"></i> Create a new maintenance request</a></li>
-            <li><a href="profile.html"><i class="fas fa-id-card"></i> Update your student card</a></li>
-          </ul>
+
+          <div class="quick-link-card" onclick="window.location.href='notes.html'">
+            <div class="quick-link-icon">
+              <i class="fas fa-list"></i>
+            </div>
+            <div class="quick-link-content">
+              <h4>My Requests</h4>
+              <p>View and manage your requests</p>
+            </div>
+          </div>
+
+          <div class="quick-link-card" onclick="alert('Facility List coming soon!')">
+            <div class="quick-link-icon">
+              <i class="fas fa-building"></i>
+            </div>
+            <div class="quick-link-content">
+              <h4>Facility List</h4>
+              <p>Browse available facilities</p>
+            </div>
+          </div>
+
+          <div class="quick-link-card" onclick="alert('Calendar coming soon!')">
+            <div class="quick-link-icon">
+              <i class="fas fa-calendar"></i>
+            </div>
+            <div class="quick-link-content">
+              <h4>Calendar</h4>
+              <p>Schedule and view events</p>
+            </div>
+          </div>
+
+          <div class="quick-link-card" onclick="window.location.href='notifications.html'">
+            <div class="quick-link-icon">
+              <i class="fas fa-bell"></i>
+            </div>
+            <div class="quick-link-content">
+              <h4>Notifications</h4>
+              <p>Check your alerts</p>
+            </div>
+          </div>
+
+          <div class="quick-link-card" onclick="alert('Reports coming soon!')">
+            <div class="quick-link-icon">
+              <i class="fas fa-chart-bar"></i>
+            </div>
+            <div class="quick-link-content">
+              <h4>Reports</h4>
+              <p>View analytics and reports</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -221,6 +282,21 @@
         </div>
       </section>
     </main>
+
+    <!-- Right Sidebar - Activity Feed -->
+    <aside class="activity-sidebar">
+      <div class="activity-header">
+        <h3><i class="fas fa-history"></i> Recent Activity</h3>
+        <span class="activity-note">Latest updates</span>
+      </div>
+
+      <div class="activity-feed" id="activityFeed">
+        <div class="activity-empty">
+          <i class="fas fa-clock" style="font-size: 2rem; color: var(--muted); margin-bottom: 12px;"></i>
+          <p style="color: var(--muted); margin: 0;">No recent activity</p>
+        </div>
+      </div>
+    </aside>
   </div>
 
   <div id="chartTooltip" class="chart-tooltip" aria-hidden="true"></div>

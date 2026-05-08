@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings · FMRMS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="app-body">
+  <header class="top-header">
+    <img class="header-logo" src="../images/snsu logo.png" alt="SNSU Logo" />
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="profile-block">
+          <img id="sidebarProfilePhoto" class="sidebar-avatar" src="" alt="Profile" />
+          <div class="profile-info">
+            <div class="profile-name" id="sidebarProfileName">Student</div>
+            <div class="profile-meta" id="sidebarProfileMeta">—</div>
+          </div>
+        </div>
+
+        <ul class="nav">
+          <li><a href="../index.html"><i class="fas fa-tachometer-alt nav-icon"></i><span class="nav-label">Dashboard</span></a></li>
+          <li><a href="../profile.html"><i class="fas fa-user nav-icon"></i><span class="nav-label">My Profile</span></a></li>
+          <li><a href="../notes.html"><i class="fas fa-list nav-icon"></i><span class="nav-label">My Requests</span></a></li>
+          <li><a href="../notes.html"><i class="fas fa-plus nav-icon"></i><span class="nav-label">Create Request</span></a></li>
+          <li><a href="facility-list.html"><i class="fas fa-building nav-icon"></i><span class="nav-label">Facility List</span></a></li>
+          <li><a href="calendar.html"><i class="fas fa-calendar nav-icon"></i><span class="nav-label">Calendar</span></a></li>
+          <li><a href="../notifications.html"><i class="fas fa-bell nav-icon"></i><span class="nav-label">Notifications</span></a></li>
+          <li><a href="reports.html"><i class="fas fa-chart-bar nav-icon"></i><span class="nav-label">Reports</span></a></li>
+          <li><a href="../help.html"><i class="fas fa-question-circle nav-icon"></i><span class="nav-label">FAQ</span></a></li>
+          <li><a href="settings.html"><i class="fas fa-cog nav-icon"></i><span class="nav-label">Settings</span></a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-label">Logout</span>
+        </button>
+      </div>
+    </nav>
+
+    <main class="main">
+      <section class="page-header">
+        <h1>Settings</h1>
+        <p class="page-subtitle">Student preferences for the portal UI (local demo).</p>
+      </section>
+
+      <div class="settings-card">
+        <div class="card-header">
+          <h3><i class="fas fa-sliders-h"></i> Display preferences</h3>
+          <span class="card-note">Affects this browser</span>
+        </div>
+
+        <div class="settings-workspace">
+          <div class="setting-toggle">
+            <input id="studentShowActivity" type="checkbox" />
+            <label for="studentShowActivity" style="cursor:pointer;">Show activity panels</label>
+          </div>
+
+          <div class="setting-toggle">
+            <input id="studentCompactDensity" type="checkbox" />
+            <label for="studentCompactDensity" style="cursor:pointer;">Compact layout density</label>
+          </div>
+
+          <div class="form-row" style="margin-bottom:0;">
+            <label for="studentAccent">Accent color</label>
+            <input id="studentAccent" type="color" style="height:48px;width:96px;padding:0;border:none;background:transparent;" />
+          </div>
+
+          <div class="settings-actions">
+            <button class="btn secondary" type="button" onclick="resetStudentSettings()">Reset</button>
+            <button class="btn primary" type="button" onclick="saveStudentSettings()">Save</button>
+          </div>
+        </div>
+
+        <div class="callout">
+          <strong>Note:</strong>
+          <span>Admin permissions are controlled from admin Settings. Student settings only affect the UI experience for students.</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', initStudentSettings);
+  </script>
+</body>
+</html>
+

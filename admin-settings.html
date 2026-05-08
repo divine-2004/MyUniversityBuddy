@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Settings · SNSU-FRMS</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="app-body">
+  <header class="admin-topbar"><div class="admin-topbar-left"><img class="admin-logo" src="images/snsu logo.png" alt="SNSU Logo"><div class="admin-info"><div class="admin-name">Admin Portal</div><div class="admin-role">Settings</div></div></div></header>
+  <div class="layout admin-layout">
+    <nav class="sidebar admin-sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="profile-block"><img id="sidebarProfilePhoto" class="sidebar-avatar" src="" alt="Profile"><div class="profile-info"><div class="profile-name">Admin</div><div class="profile-meta">System Admin</div></div></div>
+        <ul class="nav">
+          <li><a href="admin.html"><i class="fas fa-tachometer-alt nav-icon"></i><span class="nav-label">Dashboard</span></a></li>
+          <li><a href="user-management.html"><i class="fas fa-users nav-icon"></i><span class="nav-label">User Management</span></a></li>
+          <li><a href="facility-management.html"><i class="fas fa-building nav-icon"></i><span class="nav-label">Facility Management</span></a></li>
+          <li><a href="requests.html"><i class="fas fa-clipboard-list nav-icon"></i><span class="nav-label">Requests Oversight</span></a></li>
+          <li><a href="reports.html"><i class="fas fa-chart-bar nav-icon"></i><span class="nav-label">Reports & Analytics</span></a></li>
+          <li><a href="admin-notifications.html"><i class="fas fa-bell nav-icon"></i><span class="nav-label">Notifications</span></a></li>
+          <li><a href="admin-settings.html" class="active"><i class="fas fa-cog nav-icon"></i><span class="nav-label">Settings</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-footer"><button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-label">Logout</span></button></div>
+    </nav>
+    <main class="main admin-main admin-page-main">
+      <section class="page-header">
+        <h1>Settings</h1>
+        <p class="page-subtitle">Control accounts, preferences, permissions, notifications, reports, and dashboard customization.</p>
+      </section>
+
+      <section class="settings-workspace">
+        <div class="settings-tabs" role="tablist" aria-label="Admin settings sections">
+          <button class="settings-tab active" type="button" data-settings-tab="accounts"><i class="fas fa-users"></i><span>Accounts</span></button>
+          <button class="settings-tab" type="button" data-settings-tab="preferences"><i class="fas fa-sliders"></i><span>Preferences</span></button>
+          <button class="settings-tab" type="button" data-settings-tab="permissions"><i class="fas fa-shield-halved"></i><span>Permissions</span></button>
+          <button class="settings-tab" type="button" data-settings-tab="notifications"><i class="fas fa-bell"></i><span>Notifications</span></button>
+          <button class="settings-tab" type="button" data-settings-tab="reports"><i class="fas fa-chart-line"></i><span>Reports</span></button>
+          <button class="settings-tab" type="button" data-settings-tab="customization"><i class="fas fa-palette"></i><span>Customize</span></button>
+        </div>
+
+        <form class="settings-panels" onsubmit="saveAdminSettingsFromForm(); return false;">
+          <div class="settings-panel active" data-settings-panel="accounts">
+            <div class="settings-card">
+              <div class="card-header">
+                <h3><i class="fas fa-users"></i> Account Controls</h3>
+                <span class="card-note">Admin identity and account rules</span>
+              </div>
+              <div class="settings-grid">
+                <div class="form-row"><label for="adminDisplayName">Admin display name</label><input id="adminDisplayName" type="text"></div>
+                <div class="form-row"><label for="adminEmail">Admin notification email</label><input id="adminEmail" type="email"></div>
+                <div class="form-row"><label for="sessionTimeout">Session timeout</label><select id="sessionTimeout"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option><option value="120">2 hours</option></select></div>
+                <label class="setting-toggle"><input id="requireStrongPassword" type="checkbox"><span>Require strong passwords for managed accounts</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-panel" data-settings-panel="preferences">
+            <div class="settings-card">
+              <div class="card-header">
+                <h3><i class="fas fa-sliders"></i> System Preferences</h3>
+                <span class="card-note">Default request and workflow behavior</span>
+              </div>
+              <div class="settings-grid">
+                <div class="form-row"><label for="defaultStatus">Default request status</label><select id="defaultStatus"><option>Pending</option><option>Approved</option><option>In Progress</option></select></div>
+                <div class="form-row"><label for="defaultPriority">Default priority</label><select id="defaultPriority"><option>Low</option><option>Medium</option><option>High</option></select></div>
+                <div class="form-row"><label for="autoArchiveDays">Auto-archive resolved requests after</label><input id="autoArchiveDays" type="number" min="1" max="365"></div>
+                <label class="setting-toggle"><input id="allowStudentCancel" type="checkbox"><span>Allow students to cancel pending requests</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-panel" data-settings-panel="permissions">
+            <div class="settings-card">
+              <div class="card-header">
+                <h3><i class="fas fa-shield-halved"></i> Permissions</h3>
+                <span class="card-note">Decide which roles can perform admin actions</span>
+              </div>
+              <div class="permission-list">
+                <label class="setting-toggle"><input id="permApproveRequests" type="checkbox"><span>Staff can approve or reject requests</span></label>
+                <label class="setting-toggle"><input id="permManageFacilities" type="checkbox"><span>Staff can manage facility records</span></label>
+                <label class="setting-toggle"><input id="permManageUsers" type="checkbox"><span>Administrators can add and remove users</span></label>
+                <label class="setting-toggle"><input id="permExportReports" type="checkbox"><span>Staff can export reports</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-panel" data-settings-panel="notifications">
+            <div class="settings-card">
+              <div class="card-header">
+                <h3><i class="fas fa-bell"></i> Notification Rules</h3>
+                <span class="card-note">Choose when admins receive alerts</span>
+              </div>
+              <div class="settings-grid">
+                <label class="setting-toggle"><input id="notifyNewRequest" type="checkbox"><span>New request submitted</span></label>
+                <label class="setting-toggle"><input id="notifyDueSoon" type="checkbox"><span>Request due soon</span></label>
+                <label class="setting-toggle"><input id="notifyFacilityChange" type="checkbox"><span>Facility availability changes</span></label>
+                <div class="form-row"><label for="notificationDigest">Digest schedule</label><select id="notificationDigest"><option>Instant</option><option>Daily</option><option>Weekly</option></select></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-panel" data-settings-panel="reports">
+            <div class="settings-card">
+              <div class="card-header">
+                <h3><i class="fas fa-chart-line"></i> Reports</h3>
+                <span class="card-note">Set reporting defaults and export format</span>
+              </div>
+              <div class="settings-grid">
+                <div class="form-row"><label for="reportRange">Default report range</label><select id="reportRange"><option>Last 7 days</option><option>Last 30 days</option><option>This semester</option><option>This year</option></select></div>
+                <div class="form-row"><label for="reportFormat">Export format</label><select id="reportFormat"><option>PDF</option><option>CSV</option><option>XLSX</option></select></div>
+                <label class="setting-toggle"><input id="includeCharts" type="checkbox"><span>Include charts in generated reports</span></label>
+                <label class="setting-toggle"><input id="includeActivityLog" type="checkbox"><span>Include activity log appendix</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-panel" data-settings-panel="customization">
+            <div class="settings-card">
+              <div class="card-header">
+                <h3><i class="fas fa-palette"></i> Customization</h3>
+                <span class="card-note">Tune the dashboard display</span>
+              </div>
+              <div class="settings-grid">
+                <div class="form-row"><label for="dashboardDensity">Dashboard density</label><select id="dashboardDensity"><option>Comfortable</option><option>Compact</option></select></div>
+                <div class="form-row"><label for="accentColor">Accent color</label><select id="accentColor"><option value="#3498DB">Blue</option><option value="#27AE60">Green</option><option value="#2C3E50">Charcoal</option></select></div>
+                <label class="setting-toggle"><input id="showActivityPanel" type="checkbox"><span>Show dashboard activity panel</span></label>
+                <label class="setting-toggle"><input id="showMetricCards" type="checkbox"><span>Show dashboard metric cards</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-actions">
+            <button class="btn secondary" type="button" onclick="renderAdminSettings()">Reset Changes</button>
+            <button class="btn primary" type="submit">Save Settings</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+  <script src="js/script.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', initializeAdminSettingsPage);</script>
+</body>
+</html>
+
+

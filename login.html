@@ -30,7 +30,8 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (localStorage.getItem('loggedIn') === 'true') {
-        window.location = 'index.html';
+        const role = localStorage.getItem('userRole') === 'ADMIN' ? 'ADMIN' : 'STUDENT';
+        window.location = role === 'ADMIN' ? 'admin.html' : 'index.html';
       }
     });
   </script>
