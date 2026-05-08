@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FMRMS Dashboard · SNSU</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
   <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -24,17 +26,22 @@
         </div>
 
         <ul class="nav">
-          <li><a href="index.html"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a></li>
-          <li><a href="notifications.html"><span class="nav-icon">🔔</span><span class="nav-label">Notifications</span></a></li>
-          <li><a href="profile.html"><span class="nav-icon">🧑</span><span class="nav-label">Profile</span></a></li>
-          <li><a href="notes.html"><span class="nav-icon">📝</span><span class="nav-label">Requests</span></a></li>
-          <li><a href="help.html"><span class="nav-icon">❓</span><span class="nav-label">Help</span></a></li>
+          <li><a href="index.html"><i class="fas fa-tachometer-alt nav-icon"></i><span class="nav-label">Dashboard</span></a></li>
+          <li><a href="profile.html"><i class="fas fa-user nav-icon"></i><span class="nav-label">My Profile</span></a></li>
+          <li><a href="notes.html"><i class="fas fa-list nav-icon"></i><span class="nav-label">My Requests</span></a></li>
+          <li><a href="#"><i class="fas fa-plus nav-icon"></i><span class="nav-label">Create Request</span></a></li>
+          <li><a href="#"><i class="fas fa-building nav-icon"></i><span class="nav-label">Facility List</span></a></li>
+          <li><a href="#"><i class="fas fa-calendar nav-icon"></i><span class="nav-label">Calendar</span></a></li>
+          <li><a href="notifications.html"><i class="fas fa-bell nav-icon"></i><span class="nav-label">Notifications</span></a></li>
+          <li><a href="#"><i class="fas fa-chart-bar nav-icon"></i><span class="nav-label">Reports</span></a></li>
+          <li><a href="help.html"><i class="fas fa-question-circle nav-icon"></i><span class="nav-label">FAQ</span></a></li>
+          <li><a href="#"><i class="fas fa-cog nav-icon"></i><span class="nav-label">Settings</span></a></li>
         </ul>
       </div>
 
       <div class="sidebar-footer">
         <button class="logout-btn" onclick="logout()">
-          <span class="nav-icon">🚪</span><span class="nav-label">Logout</span>
+          <i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-label">Logout</span>
         </button>
       </div>
     </nav>
@@ -45,47 +52,174 @@
         <p class="page-subtitle">Track open requests, monitor status, and plan repairs.</p>
       </section>
 
-      <div class="grid">
-        <div class="card">
-          <div class="card-header">
-            <h3>Request summary</h3>
-            <span class="card-note">Real-time insights</span>
+      <!-- User Info Section -->
+      <div class="user-info-card">
+        <div class="user-avatar">
+          <i class="fas fa-user-circle"></i>
+        </div>
+        <div class="user-details">
+          <h2 id="userName">Student Name</h2>
+          <p id="userId">ID: 123456789</p>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="summary-grid">
+        <div class="summary-card total-card">
+          <div class="summary-icon">
+            <i class="fas fa-clipboard-list"></i>
           </div>
-          <ul class="stats">
-            <li><strong id="totalCount">0</strong> Total requests</li>
-            <li><strong id="pendingCount">0</strong> Pending</li>
-            <li><strong id="approvedCount">0</strong> Approved</li>
-            <li><strong id="rejectedCount">0</strong> Rejected</li>
-          </ul>
+          <div class="summary-content">
+            <h3>Total Requests</h3>
+            <div class="summary-number" id="totalRequests">0</div>
+          </div>
         </div>
 
-        <div class="card">
-          <div class="card-header">
-            <h3>Requests by status</h3>
-            <span class="card-note">Quick breakdown</span>
+        <div class="summary-card pending-card">
+          <div class="summary-icon">
+            <i class="fas fa-clock"></i>
           </div>
-          <canvas id="statusChart" class="chart-canvas"></canvas>
+          <div class="summary-content">
+            <h3>Pending</h3>
+            <div class="summary-number" id="pendingRequests">0</div>
+          </div>
         </div>
 
-        <div class="card">
-          <div class="card-header">
-            <h3>Request trend</h3>
-            <span class="card-note">Last 7 days</span>
+        <div class="summary-card inprogress-card">
+          <div class="summary-icon">
+            <i class="fas fa-cog"></i>
           </div>
-          <canvas id="trendChart" class="chart-canvas"></canvas>
+          <div class="summary-content">
+            <h3>In Progress</h3>
+            <div class="summary-number" id="inprogressRequests">0</div>
+          </div>
         </div>
 
+        <div class="summary-card completed-card">
+          <div class="summary-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="summary-content">
+            <h3>Completed</h3>
+            <div class="summary-number" id="completedRequests">0</div>
+          </div>
+        </div>
+
+        <div class="summary-card cancelled-card">
+          <div class="summary-icon">
+            <i class="fas fa-times-circle"></i>
+          </div>
+          <div class="summary-content">
+            <h3>Cancelled</h3>
+            <div class="summary-number" id="cancelledRequests">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analytics Section -->
+      <section class="analytics-section">
+        <div class="section-header">
+          <h2><i class="fas fa-chart-line"></i> Analytics & Insights</h2>
+          <p>Track your request activity and status distribution</p>
+        </div>
+
+        <div class="analytics-grid">
+          <!-- Activity Overview Line Chart -->
+          <div class="card analytics-card full-width">
+            <div class="card-header">
+              <h3><i class="fas fa-chart-line"></i> Request Activity Overview</h3>
+              <span class="card-note">Last 7 days</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="activityChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Status Distribution Bar Chart -->
+          <div class="card analytics-card">
+            <div class="card-header">
+              <h3><i class="fas fa-chart-bar"></i> Status Distribution</h3>
+              <span class="card-note">Current breakdown</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="statusChart" class="chart-canvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Activity Metrics -->
+          <div class="card analytics-card">
+            <div class="card-header">
+              <h3><i class="fas fa-tachometer-alt"></i> Key Metrics</h3>
+              <span class="card-note">Summary stats</span>
+            </div>
+            <div class="metrics-list">
+              <div class="metric-item">
+                <span class="metric-label">Avg. Resolution Time</span>
+                <span class="metric-value" id="avgResolutionTime">—</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">Request Success Rate</span>
+                <span class="metric-value" id="successRate">—</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">This Week's Requests</span>
+                <span class="metric-value" id="weeklyRequests">0</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">Avg. Requests/Day</span>
+                <span class="metric-value" id="avgRequestsPerDay">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick Actions Section -->
+      <section class="quick-actions-section">
         <div class="card">
           <div class="card-header">
-            <h3>Quick actions</h3>
+            <h3><i class="fas fa-lightning-bolt"></i> Quick actions</h3>
             <span class="card-note">Jumpstart your workflow</span>
           </div>
           <ul class="quick-links">
-            <li><a href="notes.html">Create a new maintenance request</a></li>
-            <li><a href="profile.html">Update your student card</a></li>
+            <li><a href="notes.html"><i class="fas fa-plus"></i> Create a new maintenance request</a></li>
+            <li><a href="profile.html"><i class="fas fa-id-card"></i> Update your student card</a></li>
           </ul>
         </div>
-      </div>
+      </section>
+
+      <!-- Recent Requests Table Section -->
+      <section class="recent-requests-section">
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-list"></i> Recent Requests</h2>
+            <span class="card-note">Your latest maintenance requests</span>
+          </div>
+
+          <div class="table-container">
+            <table class="requests-table">
+              <thead>
+                <tr>
+                  <th>Request ID</th>
+                  <th>Facility</th>
+                  <th>Location</th>
+                  <th>Submission Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="recentRequestsBody">
+                <tr class="empty-state">
+                  <td colspan="6" style="text-align: center; padding: 32px;">
+                    <i class="fas fa-inbox" style="font-size: 2.5rem; color: var(--muted); margin-bottom: 12px;"></i>
+                    <p style="color: var(--muted); margin: 8px 0 0 0;">No requests yet. Create your first maintenance request!</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 

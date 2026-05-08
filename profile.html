@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Card · FMRMS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -24,17 +25,22 @@
         </div>
 
         <ul class="nav">
-          <li><a href="index.html"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a></li>
-          <li><a href="notifications.html"><span class="nav-icon">🔔</span><span class="nav-label">Notifications</span></a></li>
-          <li><a href="profile.html"><span class="nav-icon">🧑</span><span class="nav-label">Profile</span></a></li>
-          <li><a href="notes.html"><span class="nav-icon">📝</span><span class="nav-label">Requests</span></a></li>
-          <li><a href="help.html"><span class="nav-icon">❓</span><span class="nav-label">Help</span></a></li>
+          <li><a href="index.html"><i class="fas fa-tachometer-alt nav-icon"></i><span class="nav-label">Dashboard</span></a></li>
+          <li><a href="profile.html"><i class="fas fa-user nav-icon"></i><span class="nav-label">My Profile</span></a></li>
+          <li><a href="notes.html"><i class="fas fa-list nav-icon"></i><span class="nav-label">My Requests</span></a></li>
+          <li><a href="#"><i class="fas fa-plus nav-icon"></i><span class="nav-label">Create Request</span></a></li>
+          <li><a href="#"><i class="fas fa-building nav-icon"></i><span class="nav-label">Facility List</span></a></li>
+          <li><a href="#"><i class="fas fa-calendar nav-icon"></i><span class="nav-label">Calendar</span></a></li>
+          <li><a href="notifications.html"><i class="fas fa-bell nav-icon"></i><span class="nav-label">Notifications</span></a></li>
+          <li><a href="#"><i class="fas fa-chart-bar nav-icon"></i><span class="nav-label">Reports</span></a></li>
+          <li><a href="help.html"><i class="fas fa-question-circle nav-icon"></i><span class="nav-label">FAQ</span></a></li>
+          <li><a href="#"><i class="fas fa-cog nav-icon"></i><span class="nav-label">Settings</span></a></li>
         </ul>
       </div>
 
       <div class="sidebar-footer">
         <button class="logout-btn" onclick="logout()">
-          <span class="nav-icon">🚪</span><span class="nav-label">Logout</span>
+          <i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-label">Logout</span>
         </button>
       </div>
     </nav>

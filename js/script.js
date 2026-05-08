@@ -338,6 +338,7 @@ function initDashboard() {
   updateUserGreeting();
   updateTopbarTitle();
   updateStudentCard();
+  updateDashboardUserInfo();
   updateDashboardStats();
   renderCharts();
   updateNotificationBadge();
@@ -529,37 +530,56 @@ function updateDashboardStats() {
   const requests = getRequests();
   const total = requests.length;
   const pending = requests.filter((r) => r.status === 'Pending').length;
-  const approved = requests.filter((r) => r.status === 'Approved').length;
-  const rejected = requests.filter((r) => r.status === 'Rejected').length;
+  const inProgress = requests.filter((r) => r.status === 'In Progress').length;
+  const completed = requests.filter((r) => r.status === 'Approved').length;
+  const cancelled = requests.filter((r) => r.status === 'Rejected').length;
 
-  const totalEl = document.getElementById('totalCount');
-  const pendingEl = document.getElementById('pendingCount');
-  const approvedEl = document.getElementById('approvedCount');
-  const rejectedEl = document.getElementById('rejectedCount');
+  // Update summary cards
+  const totalEl = document.getElementById('totalRequests');
+  const pendingEl = document.getElementById('pendingRequests');
+  const inprogressEl = document.getElementById('inprogressRequests');
+  const completedEl = document.getElementById('completedRequests');
+  const cancelledEl = document.getElementById('cancelledRequests');
 
   if (totalEl) totalEl.textContent = String(total);
   if (pendingEl) pendingEl.textContent = String(pending);
-  if (approvedEl) approvedEl.textContent = String(approved);
-  if (rejectedEl) rejectedEl.textContent = String(rejected);
+  if (inprogressEl) inprogressEl.textContent = String(inProgress);
+  if (completedEl) completedEl.textContent = String(completed);
+  if (cancelledEl) cancelledEl.textContent = String(cancelled);
 
   // Keep charts in sync with current stats
   renderCharts();
 }
 
+function updateDashboardUserInfo() {
+  const profile = getProfile();
+  const role = getUserRole();
+  const name = profile.name || (role === 'ADMIN' ? 'ADMIN' : 'Student');
+  const studentId = profile.studentId || '—';
+
+  const nameEl = document.getElementById('userName');
+  const idEl = document.getElementById('userId');
+
+  if (nameEl) nameEl.textContent = name;
+  if (idEl) idEl.textContent = `ID: ${studentId}`;
+}
+
 function renderCharts() {
   const statusCanvas = document.getElementById('statusChart');
-  const trendCanvas = document.getElementById('trendChart');
-  if (!statusCanvas && !trendCanvas) return;
+  const activityCanvas = document.getElementById('activityChart');
+  if (!statusCanvas && !activityCanvas) return;
 
   const requests = getRequests();
 
   if (statusCanvas) {
-    renderStatusChart(statusCanvas, requests);
+    renderStatusChartJs(statusCanvas, requests);
   }
 
-  if (trendCanvas) {
-    renderTrendChart(trendCanvas, requests);
+  if (activityCanvas) {
+    renderActivityChartJs(activityCanvas, requests);
   }
+
+  renderAnalyticsMetrics(requests);
 }
 
 function renderStatusChart(canvas, requests) {
@@ -615,6 +635,244 @@ function renderTrendChart(canvas, requests) {
 
   const labels = days.map((d) => formatDateLabel(d));
   drawLineChart(canvas, labels, values);
+}
+
+// Chart.js implementations for enhanced analytics
+function renderActivityChartJs(canvas, requests) {
+  if (window.activityChartInstance) {
+    window.activityChartInstance.destroy();
+  }
+
+  const today = new Date();
+  const days = Array.from({ length: 7 }).map((_, idx) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (6 - idx));
+    return date;
+  });
+
+  const values = days.map((day) => {
+    const dayStart = new Date(day);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+
+    return requests.filter((r) => {
+      if (!r.reportedAt) return false;
+      const time = new Date(r.reportedAt).getTime();
+      return time >= dayStart.getTime() && time < dayEnd.getTime();
+    }).length;
+  });
+
+  const labels = days.map((d) => formatDateLabel(d));
+
+  const ctx = canvas.getContext('2d');
+  window.activityChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Requests Created',
+        data: values,
+        borderColor: 'rgba(59, 130, 246, 1)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 2.5,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            font: { size: 12 },
+            color: 'rgba(100, 116, 139, 0.9)',
+            usePointStyle: true,
+            padding: 20,
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(15, 23, 42, 0.9)',
+          padding: 12,
+          borderRadius: 8,
+          titleFont: { size: 13, weight: 'bold' },
+          bodyFont: { size: 12 },
+          callbacks: {
+            afterLabel: () => 'requests',
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+            color: 'rgba(100, 116, 139, 0.7)',
+            font: { size: 12 }
+          },
+          grid: {
+            color: 'rgba(148, 163, 184, 0.1)',
+            drawBorder: false,
+          }
+        },
+        x: {
+          ticks: {
+            color: 'rgba(100, 116, 139, 0.7)',
+            font: { size: 12 }
+          },
+          grid: {
+            display: false,
+            drawBorder: false,
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderStatusChartJs(canvas, requests) {
+  if (window.statusChartInstance) {
+    window.statusChartInstance.destroy();
+  }
+
+  const counts = {
+    Pending: 0,
+    'In Progress': 0,
+    Approved: 0,
+    Completed: 0,
+    Rejected: 0,
+    Cancelled: 0,
+  };
+
+  requests.forEach((r) => {
+    const status = r.status || 'Pending';
+    if (counts[status] !== undefined) {
+      counts[status] += 1;
+    }
+  });
+
+  const labels = ['Pending', 'In Progress', 'Approved', 'Completed', 'Rejected', 'Cancelled'];
+  const data = labels.map((label) => counts[label] || 0);
+  const colors = [
+    'rgba(245, 158, 11, 0.9)',
+    'rgba(59, 130, 246, 0.9)',
+    'rgba(34, 197, 94, 0.9)',
+    'rgba(16, 185, 129, 0.9)',
+    'rgba(239, 68, 68, 0.9)',
+    'rgba(107, 114, 128, 0.9)',
+  ];
+
+  const ctx = canvas.getContext('2d');
+  window.statusChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Number of Requests',
+        data: data,
+        backgroundColor: colors,
+        borderRadius: 8,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          backgroundColor: 'rgba(15, 23, 42, 0.9)',
+          padding: 12,
+          borderRadius: 8,
+          titleFont: { size: 13, weight: 'bold' },
+          bodyFont: { size: 12 },
+          callbacks: {
+            afterLabel: () => 'requests',
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+            color: 'rgba(100, 116, 139, 0.7)',
+            font: { size: 12 }
+          },
+          grid: {
+            color: 'rgba(148, 163, 184, 0.1)',
+            drawBorder: false,
+          }
+        },
+        y: {
+          ticks: {
+            color: 'rgba(100, 116, 139, 0.7)',
+            font: { size: 12 }
+          },
+          grid: {
+            display: false,
+            drawBorder: false,
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderAnalyticsMetrics(requests) {
+  // Calculate average resolution time
+  const completedRequests = requests.filter((r) => r.status === 'Approved' || r.status === 'Completed');
+  let avgResolutionTime = '—';
+  if (completedRequests.length > 0) {
+    const totalTime = completedRequests.reduce((sum, r) => {
+      const created = new Date(r.reportedAt || Date.now());
+      const completed = new Date(r.completedAt || Date.now());
+      return sum + (completed - created);
+    }, 0);
+    const avgMs = totalTime / completedRequests.length;
+    const avgDays = Math.round(avgMs / (1000 * 60 * 60 * 24) * 10) / 10;
+    avgResolutionTime = `${avgDays} day${avgDays !== 1 ? 's' : ''}`;
+  }
+
+  // Calculate success rate
+  const successCount = completedRequests.length;
+  const successRate = requests.length > 0 ? Math.round((successCount / requests.length) * 100) : 0;
+
+  // Calculate this week's requests
+  const today = new Date();
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay());
+  weekStart.setHours(0, 0, 0, 0);
+
+  const weeklyRequests = requests.filter((r) => {
+    if (!r.reportedAt) return false;
+    const reqDate = new Date(r.reportedAt);
+    return reqDate >= weekStart;
+  }).length;
+
+  // Calculate average requests per day
+  const avgRequestsPerDay = requests.length > 0 ? Math.round((requests.length / 7) * 10) / 10 : 0;
+
+  // Update the DOM
+  const avgResolutionEl = document.getElementById('avgResolutionTime');
+  const successRateEl = document.getElementById('successRate');
+  const weeklyRequestsEl = document.getElementById('weeklyRequests');
+  const avgRequestsPerDayEl = document.getElementById('avgRequestsPerDay');
+
+  if (avgResolutionEl) avgResolutionEl.textContent = avgResolutionTime;
+  if (successRateEl) successRateEl.textContent = `${successRate}%`;
+  if (weeklyRequestsEl) weeklyRequestsEl.textContent = String(weeklyRequests);
+  if (avgRequestsPerDayEl) avgRequestsPerDayEl.textContent = String(avgRequestsPerDay);
 }
 
 function drawBarChart(canvas, labels, values, colors) {
@@ -868,6 +1126,7 @@ function renderRequests() {
     count.textContent = `${filteredRequests.length} request${filteredRequests.length === 1 ? '' : 's'}`;
   }
 
+  updateDashboardUserInfo();
   updateDashboardStats();
   checkDueDates();
 }
